@@ -3,6 +3,7 @@ package com.seproject.admin.account.controller;
 import com.seproject.admin.account.application.AdminAccountAppService;
 import com.seproject.admin.account.controller.condition.AccountCondition;
 import com.seproject.board.common.Status;
+import com.seproject.board.common.controller.dto.MessageResponse;
 import com.seproject.board.common.utils.StatusUtils;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomIllegalArgumentException;
@@ -65,25 +66,25 @@ public class AdminAccountController {
     @Operation(summary = "계정 삭제", description = "관리자는 계정을 삭제할 수 있다.")
     @DeleteMapping("/{accountId}")
     public ResponseEntity<Void> deleteAccount(@PathVariable Long accountId) {
-        accountAppService.deleteAccount(accountId);
+        accountAppService.deleteAccount(accountId,false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-//    @DeleteMapping
-//    public ResponseEntity<MessageResponse> deleteBulkAccount(@RequestBody AdminBulkAccountRequest request){
-//        accountService.deleteBulkAccount(request.getAccountIds(), false);
-//        return ResponseEntity.ok(MessageResponse.of("계정 삭제 성공"));
-//    }
-//
-//    @DeleteMapping("/permanent")
-//    public ResponseEntity<MessageResponse> deletePermanentlyBulkAccount(@RequestBody AdminBulkAccountRequest request){
-//        accountService.deleteBulkAccount(request.getAccountIds(), true);
-//        return ResponseEntity.ok(MessageResponse.of("계정 영구 삭제 성공"));
-//    }
-//
-//    @PostMapping("/restore")
-//    public ResponseEntity<MessageResponse> restoreBulkAccount(@RequestBody AdminBulkAccountRequest request){
-//        accountService.restoreBulkAccount(request.getAccountIds());
-//        return ResponseEntity.ok(MessageResponse.of("계정 복구 성공"));
-//    }
+    @DeleteMapping
+    public ResponseEntity<MessageResponse> deleteBulkAccount(@RequestBody DeleteAccountRequest request){
+        accountAppService.deleteAccount(request.getAccountIds(),false);
+        return ResponseEntity.ok(MessageResponse.of("계정 삭제 성공"));
+    }
+
+    @DeleteMapping("/permanent")
+    public ResponseEntity<MessageResponse> deletePermanentlyBulkAccount(@RequestBody DeleteAccountRequest request){
+        accountAppService.deleteAccount(request.getAccountIds(), true);
+        return ResponseEntity.ok(MessageResponse.of("계정 영구 삭제 성공"));
+    }
+
+    @PostMapping("/restore")
+    public ResponseEntity<MessageResponse> restoreBulkAccount(@RequestBody RestoreAccountRequest request){
+        accountAppService.restoreAccount(request.getAccountIds());
+        return ResponseEntity.ok(MessageResponse.of("계정 복구 성공"));
+    }
 }

@@ -26,39 +26,37 @@ public class IpFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String address = getClientIP(request);
+        String requestURI = request.getRequestURI();
 
-        if(ipService.existIpAddress(address)) {
+        if(ipService.existSpamIp(address)) {
             accessDeniedHandler.handle(request,response,new CustomAccessDeniedException(ErrorCode.BANNED_IP,null));
         } else {
-            filterChain.doFilter(request,response);
+            if(requestURI.startsWith("/admin") && !ipService.existAdminIpAddress(address)) {
+                accessDeniedHandler.handle(request,response,new CustomAccessDeniedException(ErrorCode.CANNOT_ACCESS_ADMIN_IP, null));
+            } else {
+                filterChain.doFilter(request, response);
+            }
         }
     }
 
         public static String getClientIP(HttpServletRequest request) {
             String ip = request.getHeader("X-Forwarded-For");
-//            log.info("> X-FORWARDED-FOR : " + ip);
 
             if (ip == null) {
                 ip = request.getHeader("Proxy-Client-IP");
-//                log.info("> Proxy-Client-IP : " + ip);
             }
             if (ip == null) {
                 ip = request.getHeader("WL-Proxy-Client-IP");
-//                log.info(">  WL-Proxy-Client-IP : " + ip);
             }
             if (ip == null) {
                 ip = request.getHeader("HTTP_CLIENT_IP");
-//                log.info("> HTTP_CLIENT_IP : " + ip);
             }
             if (ip == null) {
                 ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-//                log.info("> HTTP_X_FORWARDED_FOR : " + ip);
             }
             if (ip == null) {
                 ip = request.getRemoteAddr();
-//                log.info("> getRemoteAddr : "+ip);
             }
-//            log.info("> Result : IP Address : "+ip);
 
             return ip;
         }

@@ -23,6 +23,9 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
     @Query("select c from Comment c join c.author join c.author.account where c.author.account.accountId = :accountId")
     List<Comment> findCommentsByAccountId(@Param("accountId") Long accountId);
 
+    @Query("select c from Comment c join c.author join c.author.account where c.author.account.accountId in :accountIds")
+    List<Comment> findAllByAccountIds(@Param("accountIds") List<Long> accountIds);
+
 
     @Query("select c from Comment c join fetch c.post p join fetch p.category where c.commentId = :commentId")
     Optional<Comment> findCommentWithPostAndCategory(@Param("commentId") Long commentId);
@@ -35,6 +38,7 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
     int restore(@Param("commentIds") List<Long> commentIds, @Param("status") Status status);
 
     @Modifying
-    @Query("update Comment c set c.status = 'TEMPORART' where c.commentId in :commentIds")
-    int deleteTemporary(@Param("commentIds") List<Long> commentIds);
+    @Query("update Comment c set c.status = :status where c.commentId in :commentIds")
+    void deleteAllByIds(@Param("commentIds") List<Long> commentIds , @Param("status")Status status);
+
 }

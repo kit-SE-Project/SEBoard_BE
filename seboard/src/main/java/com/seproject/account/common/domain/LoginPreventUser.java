@@ -21,8 +21,8 @@ public class LoginPreventUser {
 
     private LocalDateTime localDateTime;
 
-    public LoginPreventUser(String loginId){
+    public LoginPreventUser(String loginId, long time){
         this.loginId = loginId;
-        this.localDateTime = LocalDateTime.now().plusMinutes(10);
+        this.localDateTime = LocalDateTime.now().plusSeconds(time);
     }
 }

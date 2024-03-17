@@ -21,4 +21,6 @@ public class Ip {
     @Column(unique = true)
     private String ipAddress;
 
+    @Enumerated(EnumType.STRING)
+    private IpType ipType;
 }

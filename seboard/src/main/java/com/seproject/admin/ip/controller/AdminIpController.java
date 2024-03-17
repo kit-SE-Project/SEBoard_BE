@@ -28,23 +28,23 @@ public class AdminIpController {
 
     private final AdminIpAppService adminIpAppService;
 
-    @Operation(summary = "금지 아이피 목록 조회", description = "접근이 금지된 아이피의 목록을 조회한다.")
+    @Operation(summary = "아이피 목록 조회", description = "아이피의 목록을 조회한다.")
     @GetMapping
-    public ResponseEntity<List<IpResponse>> retrieveAllBannedIp() {
+    public ResponseEntity<List<IpResponse>> retrieveAllBannedIp(String ipType) {
 
-        IpCondition condition = new IpCondition();
+        IpCondition condition = new IpCondition(ipType);
         List<IpResponse> response = adminIpAppService.findAll(condition);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(summary = "금지 아이피 추가", description = "접근을 금지할 아이피를 추가한다.")
+    @Operation(summary = "아이피 추가", description = "접근을 금지할 아이피를 추가한다.")
     @PostMapping
     public ResponseEntity<Void> createBannedIp(@RequestBody CreateIpRequest request) {
         adminIpAppService.createIp(request);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @Operation(summary = "금지 아이피 해제", description = "접근이 금지된 아이피를 삭제(접근 허용)한다.")
+    @Operation(summary = "아이피 삭제", description = "접근이 금지된 아이피를 삭제(접근 허용)한다.")
     @DeleteMapping
     public ResponseEntity<Void> deleteBannedIp(@RequestBody DeleteIpRequest request) {
         adminIpAppService.delete(request);

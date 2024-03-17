@@ -51,6 +51,9 @@ public enum ErrorCode {
     NOT_EXIST_DASHBOARDMENU(HttpStatus.BAD_REQUEST,142, "일치하는 URL을 가진 DashBoardMenu가 없습니다."),
     INVALID_POST_TYPE(HttpStatus.BAD_REQUEST,143, "요청한 POST Type과 다릅니다."),
     INVALID_URL_INFO(HttpStatus.BAD_REQUEST, 144, "올바르지 않은 URL INFO 입니다."),
+    ALREADY_EXIST_IP(HttpStatus.BAD_REQUEST, 145, "이미 등록된 IP 입니다."),
+    CANNOT_ACCESS_ADMIN_IP(HttpStatus.BAD_REQUEST, 146, "관리자 모드에 접속할 수 없는 IP입니다."),
+
 
     INVALID_PAGINATION(HttpStatus.BAD_REQUEST,200, "올바르지 않은 페이지 정보를 전송하였습니다."),
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, 201, "올바르지 않은 형식의 요청입니다."),

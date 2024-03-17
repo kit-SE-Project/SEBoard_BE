@@ -21,6 +21,9 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Query(value = "select p from Post p join p.author join p.author.account where p.author.account.accountId = :accountId")
     List<Post> findByAccountId(@Param("accountId") Long accountId);
 
+    @Query(value = "select p from Post p join p.author join p.author.account where p.author.account.accountId in :accountIds")
+    List<Post> findAllByAccountIds(@Param("accountIds") List<Long> accountIds);
+
     @Modifying
     @Query("update Post p set p.reportCount = 0 , p.status = 'NORMAL' where p.postId in :postIds")
     void restorePostByPostIds(@Param("postIds") List<Long> postIds);

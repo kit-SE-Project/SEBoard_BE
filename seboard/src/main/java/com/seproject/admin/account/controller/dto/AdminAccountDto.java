@@ -83,4 +83,14 @@ public class AdminAccountDto {
         private List<Long> roles;
     }
 
+    @Data
+    public static class DeleteAccountRequest {
+        List<Long> accountIds;
+    }
+
+    @Data
+    public static class RestoreAccountRequest {
+        List<Long> accountIds;
+    }
+
 }

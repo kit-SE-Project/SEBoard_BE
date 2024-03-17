@@ -5,6 +5,7 @@ import com.seproject.account.common.domain.LoginPreventUser;
 import com.seproject.account.common.domain.repository.LoginHistoryRepository;
 import com.seproject.account.common.domain.repository.LoginPreventUserRepository;
 import com.seproject.account.account.service.AccountService;
+import com.seproject.admin.settings.service.LoginSettingService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomAuthenticationException;
 import com.seproject.error.exception.PasswordIncorrectException;
@@ -29,8 +30,7 @@ public class UsernameAuthenticationProvider implements AuthenticationProvider {
     private final PasswordEncoder passwordEncoder;
     private final LoginHistoryRepository loginHistoryRepository;
     private final LoginPreventUserRepository loginPreventUserRepository;
-
-    private final EntityManager em;
+    private final LoginSettingService loginSettingService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -49,8 +49,11 @@ public class UsernameAuthenticationProvider implements AuthenticationProvider {
 
         loginHistoryRepository.save(new LoginHistory(username));
 
-        if (loginHistoryRepository.countByTime(username, LocalDateTime.now().minusMinutes(10), LocalDateTime.now()) >= 5) {
-            loginPreventUserRepository.save(new LoginPreventUser(username));
+        long loginTryCount = loginSettingService.getLoginTryCount();
+        long loginLimitTime = loginSettingService.getLoginLimitTime();
+
+        if (loginHistoryRepository.countByTime(username, LocalDateTime.now().minusSeconds(loginLimitTime), LocalDateTime.now()) >= loginTryCount) {
+            loginPreventUserRepository.save(new LoginPreventUser(username,loginLimitTime));
         }
 
         throw new PasswordIncorrectException(ErrorCode.PASSWORD_INCORRECT,null);

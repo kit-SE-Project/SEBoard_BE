@@ -27,8 +27,9 @@ public class IpQueryRepository {
 
         List<IpResponse> ips = jpaQueryFactory
                 .select(Projections.constructor(IpResponse.class,
-                        ip.id, ip.ipAddress))
+                        ip.id, ip.ipAddress,ip.ipType))
                 .from(ip)
+                .where(ip.ipType.eq(condition.getIpType()))
 //                .offset(pageable.getOffset())
 //                .limit(pageable.getPageSize())
                 .fetch();

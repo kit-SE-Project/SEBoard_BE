@@ -77,7 +77,7 @@ class UsernameAuthenticationProviderTest extends IntegrationTestSupport {
     @Test
     public void 로그인_10분_정지_아이디() throws Exception {
         FormAccount formAccount = accountSetup.createFormAccount();
-        LoginPreventUser loginPreventUser = new LoginPreventUser(formAccount.getLoginId());
+        LoginPreventUser loginPreventUser = new LoginPreventUser(formAccount.getLoginId(),600);
         loginPreventUserRepository.save(loginPreventUser);
         em.flush(); em.clear();
 

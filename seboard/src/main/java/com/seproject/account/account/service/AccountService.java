@@ -107,6 +107,10 @@ public class AccountService implements UserDetailsService {
                 .orElseThrow(() -> new CustomIllegalArgumentException(ErrorCode.USER_NOT_FOUND,null));
     }
 
+    public List<Account> findAllAccount(List<Long> accountIds) {
+        return accountRepository.findAllById(accountIds);
+    }
+
     @Transactional
     public Long createAccount(String loginId, String password,String name,List<Role> roles) {
         List<RoleAccount> roleAccounts = roles.stream()
@@ -147,18 +151,28 @@ public class AccountService implements UserDetailsService {
     }
 
     @Transactional
-    public void deleteAccount(Long accountId) {
+    public void deleteAccount(Long accountId,boolean isPermanent) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new CustomUserNotFoundException(ErrorCode.USER_NOT_FOUND,null));
 
-        if(isOAuthUser(account.getLoginId())) {
+        if(isPermanent && isOAuthUser(account.getLoginId())) {
             OAuthAccount oAuthAccount = oAuthAccountRepository.findByLoginId(account.getLoginId())
                     .orElseThrow(() -> new RuntimeException("oAuth 유저 체크는 통과했으나 찾을수 없는 경우"));
             oAuthAccount.removeSub();
 //            TODO : 외래키 제약조건 걸림 oAuthAccountRepository.delete(oAuthAccount);
         }
 
-        account.delete(true);
+        account.delete(isPermanent);
+    }
+
+    @Transactional
+    public int deleteAllAccount(List<Long> deleteAccountIds, Status status) {
+        return accountRepository.deleteAllByIds(deleteAccountIds, status);
+    }
+
+    @Transactional
+    public int restoreAllAccount(List<Long> deleteAccountIds) {
+        return accountRepository.restoreAllByIds(deleteAccountIds);
     }
     
     @Override
