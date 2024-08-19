@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.seproject.board.bulletin.domain.model.QMainPageMenu.mainPageMenu;
-import static com.seproject.board.menu.domain.QMenu.menu;
+import static com.seproject.board.menu.domain.model.QMenu.menu;
 
 @RequiredArgsConstructor
 @Repository

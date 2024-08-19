@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.querydsl.core.types.Projections.constructor;
-import static com.seproject.board.menu.domain.QCategory.category;
+import static com.seproject.board.menu.domain.model.QCategory.category;
 import static com.seproject.board.post.domain.model.QPost.post;
 import static com.seproject.member.domain.QBoardUser.boardUser;
 

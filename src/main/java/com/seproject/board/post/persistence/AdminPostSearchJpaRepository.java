@@ -20,7 +20,7 @@ import javax.persistence.EntityManager;
 
 import java.util.List;
 
-import static com.seproject.board.menu.domain.QMenu.menu;
+import static com.seproject.board.menu.domain.model.QMenu.menu;
 import static com.seproject.board.post.domain.model.QPost.post;
 
 @Repository
