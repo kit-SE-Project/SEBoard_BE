@@ -10,7 +10,7 @@ import com.seproject.admin.post.application.PostSyncService;
 import com.seproject.board.comment.domain.model.Comment;
 import com.seproject.board.comment.domain.repository.CommentRepository;
 import com.seproject.board.common.BaseTime;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.service.CategoryService;
 import com.seproject.board.post.application.dto.PostCommand.PostEditCommand;
 import com.seproject.board.post.application.dto.PostCommand.PostWriteCommand;

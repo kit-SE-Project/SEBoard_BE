@@ -1,7 +1,7 @@
 package com.seproject.board.post.domain.repository;
 
 import com.seproject.board.common.Status;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.post.domain.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

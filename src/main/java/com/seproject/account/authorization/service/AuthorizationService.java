@@ -4,7 +4,7 @@ import com.seproject.account.authorization.domain.*;
 import com.seproject.account.role.domain.Role;
 import com.seproject.account.authorization.domain.repository.AuthorizationRepository;
 import com.seproject.admin.menu.domain.SelectOption;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

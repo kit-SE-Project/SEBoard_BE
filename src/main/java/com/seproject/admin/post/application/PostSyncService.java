@@ -9,7 +9,7 @@ import com.seproject.board.comment.domain.model.Reply;
 import com.seproject.board.comment.domain.repository.CommentRepository;
 import com.seproject.board.comment.domain.repository.ReplyRepository;
 import com.seproject.board.common.BaseTime;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.domain.repository.CategoryRepository;
 import com.seproject.board.post.domain.model.Post;
 import com.seproject.board.post.domain.model.exposeOptions.ExposeOption;

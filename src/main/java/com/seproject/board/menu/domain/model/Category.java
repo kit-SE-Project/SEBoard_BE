@@ -1,4 +1,4 @@
-package com.seproject.board.menu.domain;
+package com.seproject.board.menu.domain.model;
 
 import com.seproject.board.menu.service.MenuService;
 import com.seproject.error.errorCode.ErrorCode;

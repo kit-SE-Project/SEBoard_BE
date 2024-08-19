@@ -1,7 +1,7 @@
 package com.seproject.global.data_setup;
 
 import com.seproject.board.common.BaseTime;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.post.domain.model.Post;
 import com.seproject.board.post.domain.model.exposeOptions.ExposeOption;
 import com.seproject.board.post.domain.model.exposeOptions.ExposeState;

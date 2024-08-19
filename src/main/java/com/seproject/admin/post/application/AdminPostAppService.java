@@ -8,7 +8,7 @@ import com.seproject.admin.post.controller.dto.PostRequest.AdminPostRetrieveCond
 import com.seproject.admin.post.controller.dto.PostResponse.DeletedPostResponse;
 import com.seproject.admin.post.controller.dto.PostResponse.PostRetrieveResponse;
 import com.seproject.admin.post.service.AdminPostService;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.domain.repository.CategoryRepository;
 import com.seproject.board.post.domain.model.Post;
 import com.seproject.board.post.domain.repository.AdminPostSearchRepository;

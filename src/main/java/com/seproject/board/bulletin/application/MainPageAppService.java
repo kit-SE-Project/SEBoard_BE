@@ -2,7 +2,7 @@ package com.seproject.board.bulletin.application;
 
 import com.seproject.board.bulletin.domain.model.MainPageMenu;
 import com.seproject.board.bulletin.service.MainPageService;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.post.application.PostSearchAppService;
 import com.seproject.board.post.controller.dto.PostResponse;
 import lombok.RequiredArgsConstructor;

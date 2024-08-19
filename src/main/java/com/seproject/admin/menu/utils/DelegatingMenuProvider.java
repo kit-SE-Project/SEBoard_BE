@@ -4,7 +4,7 @@ import com.seproject.account.authorization.service.AuthorizationService;
 import com.seproject.account.role.service.RoleService;
 import com.seproject.admin.menu.controller.dto.MenuDTO;
 import com.seproject.admin.menu.service.AdminMenuService;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.menu.service.MenuService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomIllegalArgumentException;

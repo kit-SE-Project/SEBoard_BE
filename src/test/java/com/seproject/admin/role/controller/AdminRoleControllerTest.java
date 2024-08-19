@@ -1,31 +1,9 @@
 package com.seproject.admin.role.controller;
 
-import com.seproject.account.account.domain.Account;
-import com.seproject.account.role.domain.Role;
-import com.seproject.admin.menu.domain.SelectOption;
-import com.seproject.admin.menu.controller.dto.MenuDTO;
-import com.seproject.admin.menu.utils.MenuRequestBuilder;
-import com.seproject.admin.role.controller.dto.RoleDTO;
-import com.seproject.board.menu.domain.Menu;
-import com.seproject.error.errorCode.ErrorCode;
-import com.seproject.error.exception.CustomIllegalArgumentException;
 import com.seproject.global.IntegrationTestSupport;
-import com.seproject.global.data_setup.AccountSetup;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class AdminRoleControllerTest extends IntegrationTestSupport {
 //    static final String url = "/admin/roles/";

@@ -1,7 +1,7 @@
 package com.seproject.admin.menu.controller.dto;
 
 import com.seproject.account.authorization.utils.AuthorizationProperty;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.Data;
 import org.springframework.data.util.Pair;
 

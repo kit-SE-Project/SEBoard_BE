@@ -6,7 +6,7 @@ import com.seproject.admin.dashboard.domain.DashBoardMenu;
 import com.seproject.admin.dashboard.service.AdminDashBoardServiceImpl;
 import com.seproject.admin.menu.service.AdminMenuService;
 import com.seproject.admin.menu.utils.DelegatingMenuProvider;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.menu.service.MenuService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomAccessDeniedException;

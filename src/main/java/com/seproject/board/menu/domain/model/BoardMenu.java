@@ -1,4 +1,4 @@
-package com.seproject.board.menu.domain;
+package com.seproject.board.menu.domain.model;
 
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomIllegalArgumentException;

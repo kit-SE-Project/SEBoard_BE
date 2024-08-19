@@ -1,14 +1,9 @@
 package com.seproject.board.menu.controller.dto;
 
-import com.seproject.account.authorization.domain.MenuAuthorization;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class CategoryDTO {
 

@@ -1,7 +1,7 @@
 package com.seproject.board.post.domain.model;
 
 import com.seproject.account.account.domain.Account;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.comment.domain.model.Comment;
 import com.seproject.board.common.BaseTime;
 import com.seproject.file.domain.model.FileMetaData;

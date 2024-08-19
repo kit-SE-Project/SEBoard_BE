@@ -4,7 +4,7 @@ import com.seproject.account.authorization.utils.AuthorizationProperty;
 import com.seproject.account.role.domain.Role;
 import com.seproject.account.role.domain.RoleAuthorization;
 import com.seproject.admin.menu.domain.SelectOption;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

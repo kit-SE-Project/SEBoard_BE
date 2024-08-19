@@ -1,10 +1,10 @@
 package com.seproject.board.menu.controller.dto;
 
 
-import com.seproject.board.menu.domain.BoardMenu;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.menu.domain.ExternalSiteMenu;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.BoardMenu;
+import com.seproject.board.menu.domain.model.Category;
+import com.seproject.board.menu.domain.model.ExternalSiteMenu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

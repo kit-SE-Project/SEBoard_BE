@@ -1,24 +1,10 @@
 package com.seproject.admin.comment.controller;
 
-import com.seproject.account.account.domain.FormAccount;
-import com.seproject.admin.comment.controller.dto.CommentDTO;
-import com.seproject.board.comment.domain.model.Comment;
-import com.seproject.board.common.Status;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.post.domain.model.Post;
 import com.seproject.global.IntegrationTestSupport;
-import com.seproject.member.domain.Member;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class AdminCommentControllerTest extends IntegrationTestSupport {
 //

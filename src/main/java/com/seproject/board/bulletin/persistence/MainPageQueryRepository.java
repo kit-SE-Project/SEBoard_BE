@@ -3,9 +3,9 @@ package com.seproject.board.bulletin.persistence;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.seproject.board.bulletin.domain.model.MainPageMenu;
-import com.seproject.board.menu.domain.BoardMenu;
-import com.seproject.board.menu.domain.InternalSiteMenu;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.BoardMenu;
+import com.seproject.board.menu.domain.model.InternalSiteMenu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package com.seproject.board.bulletin.controller.dto;
 
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

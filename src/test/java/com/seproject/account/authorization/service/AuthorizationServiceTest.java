@@ -1,22 +1,6 @@
 package com.seproject.account.authorization.service;
 
-import com.seproject.account.authorization.domain.MenuAccessAuthorization;
-import com.seproject.account.authorization.domain.MenuEditAuthorization;
-import com.seproject.account.authorization.domain.MenuExposeAuthorization;
-import com.seproject.account.authorization.domain.MenuManageAuthorization;
-import com.seproject.account.role.domain.Role;
-import com.seproject.account.role.domain.RoleAuthorization;
-import com.seproject.admin.menu.domain.SelectOption;
-import com.seproject.board.menu.domain.BoardMenu;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.menu.domain.ExternalSiteMenu;
-import com.seproject.board.menu.domain.Menu;
 import com.seproject.global.IntegrationTestSupport;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 class AuthorizationServiceTest extends IntegrationTestSupport {
 //

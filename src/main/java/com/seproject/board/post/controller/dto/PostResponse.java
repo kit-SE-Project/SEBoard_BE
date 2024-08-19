@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.seproject.file.controller.dto.FileMetaDataResponse.FileMetaDataListResponse;
 import com.seproject.board.comment.controller.dto.PaginationResponse;
 import com.seproject.member.controller.dto.UserResponse;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.post.domain.model.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;

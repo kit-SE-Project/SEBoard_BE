@@ -2,7 +2,7 @@ package com.seproject.admin.post.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.seproject.member.controller.dto.UserResponse;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.common.Status;
 import com.seproject.board.post.domain.model.Post;
 import lombok.Data;

@@ -1,26 +1,9 @@
 package com.seproject.admin.bulletin.controller;
 
-import com.seproject.board.bulletin.domain.model.MainPageMenu;
-import com.seproject.board.menu.domain.BoardMenu;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.menu.domain.ExternalSiteMenu;
-import com.seproject.board.menu.domain.Menu;
-import com.seproject.error.errorCode.ErrorCode;
-import com.seproject.error.exception.CustomIllegalArgumentException;
 import com.seproject.global.IntegrationTestSupport;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static com.seproject.admin.bulletin.controller.dto.MainPageDTO.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class AdminMainPageControllerTest extends IntegrationTestSupport {
 //    static final String url = "/admin/mainPageMenus/";

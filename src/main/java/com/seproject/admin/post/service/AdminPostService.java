@@ -2,7 +2,7 @@ package com.seproject.admin.post.service;
 
 import com.seproject.board.common.Status;
 import com.seproject.board.common.domain.repository.ReportRepository;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.post.domain.model.Post;
 import com.seproject.board.post.domain.repository.PostRepository;
 import lombok.RequiredArgsConstructor;

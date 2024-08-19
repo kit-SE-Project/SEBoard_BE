@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.seproject.board.comment.domain.model.Comment;
 import com.seproject.board.comment.domain.model.Reply;
 import com.seproject.board.common.Status;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.member.controller.dto.UserResponse;
 import lombok.Data;
 

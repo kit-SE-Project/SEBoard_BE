@@ -2,7 +2,7 @@ package com.seproject.global.data_setup;
 
 import com.seproject.board.bulletin.domain.model.MainPageMenu;
 import com.seproject.board.bulletin.domain.repository.MainPageMenuRepository;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

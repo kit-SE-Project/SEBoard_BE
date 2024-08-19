@@ -1,20 +1,9 @@
 package com.seproject.board.bulletin.controller;
 
-import com.seproject.account.account.domain.FormAccount;
-import com.seproject.board.bulletin.domain.model.MainPageMenu;
-import com.seproject.board.menu.domain.BoardMenu;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.menu.domain.Menu;
 import com.seproject.global.IntegrationTestSupport;
-import com.seproject.member.domain.Member;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class MainPageControllerTest extends IntegrationTestSupport {
 //
