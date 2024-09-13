@@ -1,3 +1,6 @@
+ifndef::snippets[]
+:snippets: build/generated-snippets
+endif::[]
 = SE Board BE API 문서
 :doctype: book
 :icons: font
@@ -5,9 +8,12 @@
 :toc: left
 :toclevels: 2
 :sectnums:
+:sectlinks:
 
-include::{snippets}/posts/write-post/http-request.adoc[]
-include::{snippets}/posts/write-post/request-fields.adoc[]
-include::{snippets}/posts/write-post/http-response.adoc[]
-include::{snippets}/posts/write-post/response-fields.adoc[]
+// http://localhost:8080/docs/index.html
 
+== PostController
+include::api/board/post.adoc[]
+
+== AdminPostController
+include::api/admin/post.adoc[]
