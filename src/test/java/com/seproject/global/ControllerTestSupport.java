@@ -26,6 +26,7 @@ import com.seproject.board.bulletin.application.BannerAppService;
 import com.seproject.board.bulletin.application.MainPageAppService;
 import com.seproject.board.comment.application.CommentAppService;
 import com.seproject.board.comment.application.ReplyAppService;
+import com.seproject.board.comment.controller.CommentController;
 import com.seproject.board.common.application.ProfileAppService;
 import com.seproject.board.common.application.ReportAppService;
 import com.seproject.board.menu.application.CategoryAppService;
@@ -54,7 +55,8 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 
 @WebMvcTest(
         controllers = {
-                PostController.class
+                PostController.class,
+                CommentController.class
         },
         excludeFilters ={
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class),
