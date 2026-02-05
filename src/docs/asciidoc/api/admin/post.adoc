@@ -1,0 +1,47 @@
+=== Old 게시글 가져오기
+include::{snippets}/admin-post-create-old/http-request.adoc[]
+include::{snippets}/admin-post-create-old/request-fields.adoc[]
+include::{snippets}/admin-post-create-old/http-response.adoc[]
+// include::{snippets}/admin-post-create-old/response-fields.adoc[]
+
+=== 게시글 목록 조회
+include::{snippets}/admin-post-retrieve-all/http-request.adoc[]
+// include::{snippets}/admin-post-retrieve-all/request-fields.adoc[]
+include::{snippets}/admin-post-retrieve-all/http-response.adoc[]
+include::{snippets}/admin-post-retrieve-all/response-fields.adoc[]
+
+=== 게시글 복구 - 단일
+include::{snippets}/admin-post-restore/http-request.adoc[]
+// include::{snippets}/aadmin-post-restore/request-fields.adoc[]
+include::{snippets}/admin-post-restore/http-response.adoc[]
+include::{snippets}/admin-post-restore/response-fields.adoc[]
+
+=== 게시글 복구 - 대량
+include::{snippets}/admin-post-bulk-restore/http-request.adoc[]
+include::{snippets}/admin-post-bulk-restore/request-fields.adoc[]
+include::{snippets}/admin-post-bulk-restore/http-response.adoc[]
+include::{snippets}/admin-post-bulk-restore/response-fields.adoc[]
+
+=== 게시글 휴지통 이동
+include::{snippets}/admin-post-delete/http-request.adoc[]
+include::{snippets}/admin-post-delete/request-fields.adoc[]
+include::{snippets}/admin-post-delete/http-response.adoc[]
+include::{snippets}/admin-post-delete/response-fields.adoc[]
+
+=== 게시글 영구 삭제
+include::{snippets}/admin-post-delete-permanent/http-request.adoc[]
+include::{snippets}/admin-post-delete-permanent/request-fields.adoc[]
+include::{snippets}/admin-post-delete-permanent/http-response.adoc[]
+include::{snippets}/admin-post-delete-permanent/response-fields.adoc[]
+
+=== 휴지통 게시글 조회
+include::{snippets}/admin-post-retrieve-deleted/http-request.adoc[]
+// include::{snippets}/admin-post-retrieve-deleted/request-fields.adoc[]
+include::{snippets}/admin-post-retrieve-deleted/http-response.adoc[]
+include::{snippets}/admin-post-retrieve-deleted/response-fields.adoc[]
+
+=== 게시글 카테고리 이동
+include::{snippets}/admin-post-migrate/http-request.adoc[]
+include::{snippets}/admin-post-migrate/request-fields.adoc[]
+include::{snippets}/admin-post-migrate/http-response.adoc[]
+include::{snippets}/admin-post-migrate/response-fields.adoc[]

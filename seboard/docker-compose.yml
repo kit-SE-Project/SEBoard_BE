@@ -1,7 +1,0 @@
-version: "3"
-services:
-  seboard:
-    build: .
-    image: maanjong/se-dev:seboard
-    container_name: seboard
-

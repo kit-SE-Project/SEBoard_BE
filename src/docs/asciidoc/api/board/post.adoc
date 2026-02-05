@@ -1,0 +1,5 @@
+=== 게시글 생성
+include::{snippets}/posts/write-post/http-request.adoc[]
+include::{snippets}/posts/write-post/request-fields.adoc[]
+include::{snippets}/posts/write-post/http-response.adoc[]
+include::{snippets}/posts/write-post/response-fields.adoc[]

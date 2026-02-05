@@ -1,6 +1,0 @@
-version: "3.0"
-services:
-  nginx:
-    build: .
-    image: maanjong/se-dev:nginx
-    container_name: nginx
