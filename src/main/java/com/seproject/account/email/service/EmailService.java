@@ -46,7 +46,7 @@ public abstract class EmailService {
         simpleEmail.setTLS(true);
 
         try {
-            simpleEmail.setFrom("jongjong159@naver.com");
+            simpleEmail.setFrom(username);
 
             send(email,simpleEmail);
 
