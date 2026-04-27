@@ -9,6 +9,7 @@ import com.seproject.board.post.controller.PostSearchOptions;
 import com.seproject.board.post.controller.dto.PostSearchRequest;
 import com.seproject.board.post.persistence.PostQueryRepository;
 import com.seproject.board.post.service.BookmarkService;
+import com.seproject.board.post.service.PostLikeService;
 import com.seproject.board.post.service.PostService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.*;
@@ -47,6 +48,7 @@ public class PostSearchAppService {
     private final MemberService memberService;
     private final PostService postService;
     private final BookmarkService bookmarkService;
+    private final PostLikeService postLikeService;
 
 
     @Transactional // TODO : 조회수 늘리기 다른 방법으로 변경
@@ -65,12 +67,16 @@ public class PostSearchAppService {
             Member member = memberService.findByAccountId(account.getAccountId());
             isBookmarked = bookmarkService.isBookmarked(post, member);
             isAuthor = post.isWrittenBy(account.getAccountId());
-
             isEditable = category.manageable(account.getRoles()) || isAuthor;
+
+            postLikeService.getMyReaction(postId, member.getBoardUserId())
+                    .ifPresent(likeType -> postDetailResponse.setMyReaction(likeType.name()));
         }
 
         postDetailResponse.setEditable(isEditable);
         postDetailResponse.setBookmarked(isBookmarked);
+        postDetailResponse.setLikeCount(postLikeService.countLikes(postId));
+        postDetailResponse.setDislikeCount(postLikeService.countDislikes(postId));
 
         ExposeState exposeState = post.getExposeOption().getExposeState();
         if(exposeState == ExposeState.PRIVACY) {
@@ -129,12 +135,16 @@ public class PostSearchAppService {
             Member member = memberService.findByAccountId(account.getAccountId());
             isBookmarked = bookmarkService.isBookmarked(post, member);
             isAuthor = post.isWrittenBy(account.getAccountId());
-
             isEditable = category.manageable(account.getRoles()) || isAuthor;
+
+            postLikeService.getMyReaction(postId, member.getBoardUserId())
+                    .ifPresent(likeType -> postDetailResponse.setMyReaction(likeType.name()));
         }
 
         postDetailResponse.setEditable(isEditable);
         postDetailResponse.setBookmarked(isBookmarked);
+        postDetailResponse.setLikeCount(postLikeService.countLikes(postId));
+        postDetailResponse.setDislikeCount(postLikeService.countDislikes(postId));
 
         post.increaseViews();
         return postDetailResponse;
@@ -197,6 +207,29 @@ public class PostSearchAppService {
         }catch (IllegalArgumentException e){
             throw new CustomIllegalArgumentException(ErrorCode.INVALID_SEARCH_OPTION, e);
         }
+    }
+
+    public List<RetrievePostListResponseElement> findTrendingPosts(Long categoryId, int days, int limit) {
+        BoardMenu boardMenu = boardMenuRepository.findById(categoryId)
+                .orElseThrow(() -> new NoSuchResourceException(ErrorCode.NOT_EXIST_CATEGORY));
+
+        Optional<Account> optional = SecurityUtils.getAccount();
+        List<Role> roles = optional.isPresent() ? optional.get().getRoles() : Collections.emptyList();
+
+        if (!boardMenu.accessible(roles)) {
+            throw new InvalidAuthorizationException(ErrorCode.ACCESS_DENIED);
+        }
+
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+        List<RetrievePostListResponseElement> trendingPosts =
+                postQueryRepository.findTrendingPosts(categoryId, since, limit);
+
+        trendingPosts.forEach(postDto -> {
+            int commentSize = commentRepository.countCommentsByPostId(postDto.getPostId());
+            postDto.setCommentSize(commentSize);
+        });
+
+        return trendingPosts;
     }
 
     //TODO : 쿼리문으로 처리?

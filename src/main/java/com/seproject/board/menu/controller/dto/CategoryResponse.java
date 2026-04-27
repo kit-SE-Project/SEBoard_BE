@@ -20,6 +20,7 @@ public class CategoryResponse {
     private String externalUrl;
     private String type;
     private List<CategoryResponse> subMenu = new ArrayList<>();
+    private Boolean popularPostEnabled;
 
     public CategoryResponse(Menu menu) {
         this.menuId = menu.getMenuId();
@@ -37,6 +38,7 @@ public class CategoryResponse {
             this.type = "BOARD";
         }else if(menu.getClass()== Category.class){
             this.type = "CATEGORY";
+            this.popularPostEnabled = ((Category) menu).isPopularPostEnabled();
         }else if(menu.getClass()== ExternalSiteMenu.class) {
             this.type = "EXTERNAL";
         }

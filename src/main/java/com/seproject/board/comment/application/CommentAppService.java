@@ -7,13 +7,18 @@ import com.seproject.admin.banned.domain.repository.SpamWordRepository;
 import com.seproject.board.comment.application.dto.CommentCommand.CommentEditCommand;
 import com.seproject.board.comment.application.dto.CommentCommand.CommentListFindCommand;
 import com.seproject.board.comment.application.dto.CommentCommand.CommentWriteCommand;
+import com.seproject.board.comment.controller.dto.CommentResponse.BestCommentResponse;
 import com.seproject.board.comment.controller.dto.CommentResponse.CommentListElement;
 import com.seproject.board.comment.controller.dto.CommentResponse.CommentListResponse;
 import com.seproject.board.comment.controller.dto.PaginationResponse;
 import com.seproject.board.comment.controller.dto.ReplyResponse;
 import com.seproject.board.comment.domain.model.Comment;
+import com.seproject.board.comment.domain.model.Reply;
 import com.seproject.board.comment.domain.repository.CommentSearchRepository;
+import com.seproject.board.comment.persistence.CommentQueryRepository;
+import com.seproject.board.comment.service.CommentLikeService;
 import com.seproject.board.comment.service.CommentService;
+import com.seproject.board.post.domain.model.LikeType;
 import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.post.domain.model.Post;
@@ -35,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +53,8 @@ public class CommentAppService {
     private final CommentService commentService;
     private final PostService postService;
     private final MemberService memberService;
+    private final CommentLikeService commentLikeService;
+    private final CommentQueryRepository commentQueryRepository;
 
     private final SpamWordRepository spamWordRepository;
 
@@ -176,22 +184,37 @@ public class CommentAppService {
         Page<Comment> commentPage = commentSearchRepository.findCommentListByPostId(postId, PageRequest.of(page, perPage));
         long totalReplySize = commentSearchRepository.countReplyByPostId(postId);
         Long accountId = account == null ? null : account.getAccountId();
+        Long memberId = account == null ? null : memberService.findByAccountId(accountId).getBoardUserId();
 
         List<CommentListElement> commentDtoList = commentPage.getContent().stream()
                 .map(comment -> {
                     List<ReplyResponse> subComments = commentSearchRepository.findReplyListByCommentId(comment.getCommentId())
                             .stream()
-                            .map(reply -> ReplyResponse.toDto(reply,
-                                    accountId != null && (reply.isWrittenBy(accountId)
-                                            || userRoles!= null && post.getCategory().manageable(userRoles)),
-                                    accountId != null && reply.getPost().isWrittenBy(accountId))
-                            ).collect(Collectors.toList());
+                            .map(reply -> {
+                                int replyLikeCount = commentLikeService.countLikes(reply.getCommentId());
+                                int replyDislikeCount = commentLikeService.countDislikes(reply.getCommentId());
+                                String replyMyReaction = memberId == null ? null :
+                                        commentLikeService.getMyReaction(reply.getCommentId(), memberId)
+                                                .map(LikeType::name).orElse(null);
+                                return ReplyResponse.toDto(reply,
+                                        accountId != null && (reply.isWrittenBy(accountId)
+                                                || userRoles != null && post.getCategory().manageable(userRoles)),
+                                        accountId != null && reply.getPost().isWrittenBy(accountId),
+                                        replyLikeCount, replyDislikeCount, replyMyReaction);
+                            }).collect(Collectors.toList());
+
+                    int likeCount = commentLikeService.countLikes(comment.getCommentId());
+                    int dislikeCount = commentLikeService.countDislikes(comment.getCommentId());
+                    String myReaction = memberId == null ? null :
+                            commentLikeService.getMyReaction(comment.getCommentId(), memberId)
+                                    .map(LikeType::name).orElse(null);
+
                     return CommentListElement.toDto(
                             comment,
                             accountId != null && comment.isWrittenBy(accountId)
                                     || userRoles != null && post.getCategory().manageable(userRoles),
                             accountId != null && comment.getPost().isWrittenBy(accountId),
-                            subComments);
+                            subComments, likeCount, dislikeCount, myReaction);
                 }).collect(Collectors.toList());
 
 
@@ -205,8 +228,36 @@ public class CommentAppService {
         return CommentListResponse.toDto(commentDtoList, paginationResponse);
     }
 
+    public List<BestCommentResponse> retrieveBestComments(Long postId, int limit) {
+        List<Comment> bestComments = commentQueryRepository.findBestCommentsByPostId(postId, limit);
 
+        Long memberId = null;
+        Optional<Account> accountOpt = SecurityUtils.getAccount();
+        if (accountOpt.isPresent()) {
+            memberId = memberService.findByAccountId(accountOpt.get().getAccountId()).getBoardUserId();
+        }
+        final Long finalMemberId = memberId;
 
+        return bestComments.stream().map(comment -> {
+            int likeCount = commentLikeService.countLikes(comment.getCommentId());
+            String myReaction = finalMemberId == null ? null :
+                    commentLikeService.getMyReaction(comment.getCommentId(), finalMemberId)
+                            .map(LikeType::name).orElse(null);
+
+            boolean isReply = comment instanceof Reply;
+            long rootCommentsBefore;
+            if (isReply) {
+                rootCommentsBefore = commentSearchRepository.countRootCommentsBefore(
+                        postId, ((Reply) comment).getSuperComment().getBaseTime().getCreatedAt());
+            } else {
+                rootCommentsBefore = commentSearchRepository.countRootCommentsBefore(
+                        postId, comment.getBaseTime().getCreatedAt());
+            }
+            int pageNumber = (int) (rootCommentsBefore / 25);
+
+            return BestCommentResponse.toDto(comment, likeCount, myReaction, isReply, pageNumber);
+        }).collect(Collectors.toList());
+    }
 
 
 

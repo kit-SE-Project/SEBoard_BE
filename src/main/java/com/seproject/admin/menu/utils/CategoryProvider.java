@@ -53,6 +53,7 @@ public class CategoryProvider extends AbstractMenuProvider {
             }
 
             Menu menu = menuService.findById(categoryId);
+            ((Category) menu).changePopularPostEnabled(request.isPopularPostEnabled());
 
             if(manage.getOption().equals("ALL")){
                 throw new CustomIllegalArgumentException(ErrorCode.INVALID_REQUEST);
@@ -86,6 +87,7 @@ public class CategoryProvider extends AbstractMenuProvider {
             menu.changeDescription(description);
             menu.changeName(name);
             menu.changeUrlInfo(urlId);
+            ((Category) menu).changePopularPostEnabled(request.isPopularPostEnabled());
 
             MenuDTO.MenuAuthOption edit = request.getWrite();
             MenuDTO.MenuAuthOption manage = request.getManage();

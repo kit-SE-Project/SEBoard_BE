@@ -1,6 +1,7 @@
 package com.seproject.admin.menu.controller.dto;
 
 import com.seproject.account.authorization.utils.AuthorizationProperty;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.domain.model.Menu;
 import lombok.Data;
 import org.springframework.data.util.Pair;
@@ -23,6 +24,7 @@ public class MenuDTO {
         private MenuAuthResponse manage;
         private MenuAuthResponse expose;
         private List<MenuResponse> subMenus;
+        private Boolean popularPostEnabled;
 
         public MenuResponse(Menu menu, List<MenuResponse> subMenus) {
             this.menuId = menu.getMenuId();
@@ -30,6 +32,9 @@ public class MenuDTO {
             this.urlId = menu.getUrlInfo();
             this.type = menu.getType();
             this.subMenus = subMenus;
+            if (menu instanceof Category) {
+                this.popularPostEnabled = ((Category) menu).isPopularPostEnabled();
+            }
         }
 
         public MenuResponse(Menu menu, List<MenuResponse> subMenus, Map<AuthorizationProperty, Pair<String, List<String>>> authOptions) {
@@ -42,6 +47,9 @@ public class MenuDTO {
             this.write = authOptions.get(EDITABLE)!=null ? new MenuAuthResponse(authOptions.get(EDITABLE)) : null;
             this.manage = authOptions.get(MANAGEABLE)!=null ? new MenuAuthResponse(authOptions.get(MANAGEABLE)) : null;
             this.expose = authOptions.get(EXPOSE)!=null ? new MenuAuthResponse(authOptions.get(EXPOSE)) : null;
+            if (menu instanceof Category) {
+                this.popularPostEnabled = ((Category) menu).isPopularPostEnabled();
+            }
         }
     }
 
@@ -74,6 +82,7 @@ public class MenuDTO {
         private MenuAuthOption write;
         private MenuAuthOption expose;
         private MenuAuthOption manage;
+        private boolean popularPostEnabled = false;
     }
 
     @Data
@@ -88,6 +97,7 @@ public class MenuDTO {
         private MenuAuthOption write;
         private MenuAuthOption expose;
         private MenuAuthOption manage;
+        private boolean popularPostEnabled = false;
     }
 
     @Data

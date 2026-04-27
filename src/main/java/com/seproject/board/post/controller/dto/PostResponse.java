@@ -91,6 +91,9 @@ public class PostResponse {
         private boolean isPined;
         private String exposeType;
         private FileMetaDataListResponse attachments;
+        private int likeCount;
+        private int dislikeCount;
+        private String myReaction;
 
 
         public RetrievePostDetailResponse(Post post) {

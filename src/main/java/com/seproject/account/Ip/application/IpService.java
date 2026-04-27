@@ -5,12 +5,10 @@ import com.seproject.account.Ip.domain.IpType;
 import com.seproject.account.Ip.domain.repository.IpRepository;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomIllegalArgumentException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Transactional(readOnly = true)
@@ -110,7 +108,7 @@ public class IpService {
             }
         }
 
-        return false;
+        return true;
     }
 
     public boolean existSpamIp(String ipAddress) {

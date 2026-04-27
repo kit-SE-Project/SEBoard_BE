@@ -24,8 +24,12 @@ public class ReplyResponse {
     private boolean isActive;
     @JsonProperty("isReadOnlyAuthor")
     private boolean isReadOnlyAuthor;
+    private int likeCount;
+    private int dislikeCount;
+    private String myReaction;
 
-    public static ReplyResponse toDto(Reply reply, boolean isAuthor, boolean isPostAuthor){
+    public static ReplyResponse toDto(Reply reply, boolean isAuthor, boolean isPostAuthor,
+                                      int likeCount, int dislikeCount, String myReaction){
         UserResponse userResponse = null;
         String contents = null;
         //TODO : dto에 로직이 들어가는게 맞나?
@@ -54,6 +58,9 @@ public class ReplyResponse {
                 .isEditable(isAuthor)
                 .isActive(!reply.isReported() && !reply.isDeleted() && ((reply.isOnlyReadByAuthor() && isAuthor) || !reply.isOnlyReadByAuthor())) //TODO : 작성자만 읽을 수 있는 경우 추가 필요
                 .isReadOnlyAuthor(reply.isOnlyReadByAuthor())
+                .likeCount(likeCount)
+                .dislikeCount(dislikeCount)
+                .myReaction(myReaction)
                 .build();
     }
 }

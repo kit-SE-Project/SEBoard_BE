@@ -3,15 +3,20 @@ package com.seproject.board.menu.domain.model;
 import com.seproject.board.menu.service.MenuService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomIllegalArgumentException;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 @NoArgsConstructor
+@Getter
 @Entity
 @DiscriminatorValue("CATEGORY")
 public class Category extends BoardMenu {
+
+    private boolean popularPostEnabled = false;
+
     public Category(Long categoryId, Menu superMenu, String name, String description, String categoryPathId) {
         super(categoryId, superMenu, name, description, categoryPathId);
 
@@ -28,5 +33,9 @@ public class Category extends BoardMenu {
     @Override
     public boolean isRemovable(MenuService categoryService) {
         return !categoryService.hasPost(getMenuId());
+    }
+
+    public void changePopularPostEnabled(boolean enabled) {
+        this.popularPostEnabled = enabled;
     }
 }

@@ -209,6 +209,7 @@ public class InitRequiredData {
 
                 Category category = new Category(null, boardMenu, "일반", "일반", UUID.randomUUID().toString().substring(0, 8));
 
+                category.changePopularPostEnabled(true);
                 category.addAuthorization(new MenuAccessAuthorization(category));
                 category.addAuthorization(new MenuExposeAuthorization(category));
                 category.addAuthorization(new MenuEditAuthorization(category));

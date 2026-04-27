@@ -1,9 +1,9 @@
 package com.seproject.board.comment.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.seproject.board.comment.domain.model.Reply;
 import com.seproject.member.controller.dto.UserResponse;
 import com.seproject.board.comment.domain.model.Comment;
-import com.seproject.board.comment.domain.model.Reply;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -71,8 +71,13 @@ public class CommentResponse {
         @JsonProperty("isReadOnlyAuthor")
         private boolean isReadOnlyAuthor;
         private List<ReplyResponse> subComments;
+        private int likeCount;
+        private int dislikeCount;
+        private String myReaction;
 
-        public static CommentListElement toDto(Comment comment, boolean isAuthor, boolean isPostAuthor, List<ReplyResponse> subComments){
+        public static CommentListElement toDto(Comment comment, boolean isAuthor, boolean isPostAuthor,
+                                               List<ReplyResponse> subComments,
+                                               int likeCount, int dislikeCount, String myReaction){
             UserResponse userResponse = null;
             String contents = null;
             //TODO : dto에 로직이 들어가는게 맞나?
@@ -100,6 +105,37 @@ public class CommentResponse {
                     .isActive(!comment.isReported() && !comment.isDeleted() && ((comment.isOnlyReadByAuthor() && isAuthor) || !comment.isOnlyReadByAuthor()) ) //TODO : 작성자만 읽을 수 있는 경우 추가 필요
                     .isReadOnlyAuthor(comment.isOnlyReadByAuthor())
                     .subComments(subComments)
+                    .likeCount(likeCount)
+                    .dislikeCount(dislikeCount)
+                    .myReaction(myReaction)
+                    .build();
+        }
+    }
+
+    @Data
+    @Builder(access = AccessLevel.PRIVATE)
+    public static class BestCommentResponse {
+        private Long commentId;
+        private UserResponse author;
+        private String contents;
+        private LocalDateTime createdAt;
+        private int likeCount;
+        private String myReaction;
+        @JsonProperty("isReply")
+        private boolean isReply;
+        private int pageNumber;
+
+        public static BestCommentResponse toDto(Comment comment, int likeCount, String myReaction,
+                                                boolean isReply, int pageNumber) {
+            return builder()
+                    .commentId(comment.getCommentId())
+                    .author(new UserResponse(comment.getAuthor()))
+                    .contents(comment.getContents())
+                    .createdAt(comment.getBaseTime().getCreatedAt())
+                    .likeCount(likeCount)
+                    .myReaction(myReaction)
+                    .isReply(isReply)
+                    .pageNumber(pageNumber)
                     .build();
         }
     }
