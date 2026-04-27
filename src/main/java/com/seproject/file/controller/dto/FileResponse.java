@@ -54,12 +54,8 @@ public class FileResponse {
         private PostOfFile post;
         private AdminFileElement fileMetaDatList;
 
-        public AdminFileRetrieveResponse(FileMetaData fileMetaData){
-            if(fileMetaData.getPost() == null) {
-                this.post = null;
-            }else{
-                this.post = new PostOfFile(fileMetaData.getPost());
-            }
+        public AdminFileRetrieveResponse(FileMetaData fileMetaData, Post post){
+            this.post = (post == null) ? null : new PostOfFile(post);
             this.fileMetaDatList = new AdminFileElement(fileMetaData);
         }
 

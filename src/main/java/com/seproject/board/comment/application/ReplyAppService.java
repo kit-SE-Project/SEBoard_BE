@@ -5,6 +5,10 @@ import com.seproject.account.role.domain.Role;
 import com.seproject.account.utils.SecurityUtils;
 import com.seproject.admin.banned.domain.repository.SpamWordRepository;
 import com.seproject.board.comment.application.dto.ReplyCommand;
+import com.seproject.file.domain.model.AttachableType;
+import com.seproject.file.domain.model.FileMetaData;
+import com.seproject.file.domain.repository.FileMetaDataRepository;
+import com.seproject.file.domain.repository.FileRepository;
 import com.seproject.board.comment.domain.model.Comment;
 import com.seproject.board.comment.domain.model.Reply;
 import com.seproject.board.comment.service.CommentService;
@@ -26,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -39,8 +44,12 @@ public class ReplyAppService {
     private final MemberService memberService;
 
     private final AnonymousService anonymousService;
+    private final FileMetaDataRepository fileMetaDataRepository;
+    private final FileRepository fileRepository;
 
     private final SpamWordRepository spamWordRepository;
+
+    private static final int MAX_COMMENT_ATTACHMENTS = 5;
 
     @Transactional
     public Long writeReply(ReplyCommand.ReplyWriteCommand command){
@@ -77,7 +86,13 @@ public class ReplyAppService {
 
         checkSpamWord(contents);
 
+        List<FileMetaData> attachments = fileMetaDataRepository.findAllById(command.getAttachmentIds());
+        if (attachments.size() > MAX_COMMENT_ATTACHMENTS) {
+            throw new CustomIllegalArgumentException(ErrorCode.INVALID_FILE_SIZE, null);
+        }
+
         Long replyId = replyService.createReply(superComment, contents, taggedComment, author, onlyReadByAuthor);
+        attachments.forEach(f -> f.attachTo(AttachableType.COMMENT, replyId));
         return replyId;
     }
 
@@ -106,6 +121,23 @@ public class ReplyAppService {
 
             reply.changeContents(command.getContents());
             reply.changeOnlyReadByAuthor(command.isOnlyReadByAuthor());
+
+            List<FileMetaData> newAttachments = fileMetaDataRepository.findAllById(command.getAttachmentIds());
+            if (newAttachments.size() > MAX_COMMENT_ATTACHMENTS) {
+                throw new CustomIllegalArgumentException(ErrorCode.INVALID_FILE_SIZE, null);
+            }
+
+            List<FileMetaData> existing = fileMetaDataRepository.findByAttachableTypeAndAttachableId(
+                    AttachableType.COMMENT, reply.getCommentId());
+            Set<Long> newIds = newAttachments.stream()
+                    .map(FileMetaData::getFileMetaDataId).collect(Collectors.toSet());
+            existing.stream()
+                    .filter(f -> !newIds.contains(f.getFileMetaDataId()))
+                    .forEach(f -> {
+                        fileRepository.delete(f.getFilePath());
+                        fileMetaDataRepository.delete(f);
+                    });
+            newAttachments.forEach(f -> f.attachTo(AttachableType.COMMENT, reply.getCommentId()));
 
             return reply.getCommentId();
         }

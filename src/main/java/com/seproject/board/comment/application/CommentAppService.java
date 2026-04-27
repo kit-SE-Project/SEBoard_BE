@@ -19,6 +19,11 @@ import com.seproject.board.comment.persistence.CommentQueryRepository;
 import com.seproject.board.comment.service.CommentLikeService;
 import com.seproject.board.comment.service.CommentService;
 import com.seproject.board.post.domain.model.LikeType;
+import com.seproject.file.controller.dto.FileMetaDataResponse.FileMetaDataElement;
+import com.seproject.file.domain.model.AttachableType;
+import com.seproject.file.domain.model.FileMetaData;
+import com.seproject.file.domain.repository.FileMetaDataRepository;
+import com.seproject.file.domain.repository.FileRepository;
 import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.post.domain.model.Post;
@@ -39,9 +44,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -55,8 +64,12 @@ public class CommentAppService {
     private final MemberService memberService;
     private final CommentLikeService commentLikeService;
     private final CommentQueryRepository commentQueryRepository;
+    private final FileMetaDataRepository fileMetaDataRepository;
+    private final FileRepository fileRepository;
 
     private final SpamWordRepository spamWordRepository;
+
+    private static final int MAX_COMMENT_ATTACHMENTS = 5;
 
     @Transactional
     public Long writeComment(CommentWriteCommand command){
@@ -88,7 +101,13 @@ public class CommentAppService {
 
         checkSpamWord(contents);
 
+        List<FileMetaData> attachments = fileMetaDataRepository.findAllById(command.getAttachmentIds());
+        if (attachments.size() > MAX_COMMENT_ATTACHMENTS) {
+            throw new CustomIllegalArgumentException(ErrorCode.INVALID_FILE_SIZE, null);
+        }
+
         Long commentId = commentService.createComment(post, author, contents, onlyReadByAuthor);
+        attachments.forEach(f -> f.attachTo(AttachableType.COMMENT, commentId));
         return commentId;
     }
 
@@ -119,10 +138,27 @@ public class CommentAppService {
         List<Role> roles = account.getRoles();
 
         if (comment.isWrittenBy(accountId) || category.manageable(roles) || category.editable(roles)) {
-           checkSpamWord(command.getContents());
+            checkSpamWord(command.getContents());
 
             comment.changeContents(command.getContents());
             comment.changeOnlyReadByAuthor(command.isOnlyReadByAuthor());
+
+            List<FileMetaData> newAttachments = fileMetaDataRepository.findAllById(command.getAttachmentIds());
+            if (newAttachments.size() > MAX_COMMENT_ATTACHMENTS) {
+                throw new CustomIllegalArgumentException(ErrorCode.INVALID_FILE_SIZE, null);
+            }
+
+            List<FileMetaData> existing = fileMetaDataRepository.findByAttachableTypeAndAttachableId(
+                    AttachableType.COMMENT, comment.getCommentId());
+            Set<Long> newIds = newAttachments.stream()
+                    .map(FileMetaData::getFileMetaDataId).collect(Collectors.toSet());
+            existing.stream()
+                    .filter(f -> !newIds.contains(f.getFileMetaDataId()))
+                    .forEach(f -> {
+                        fileRepository.delete(f.getFilePath());
+                        fileMetaDataRepository.delete(f);
+                    });
+            newAttachments.forEach(f -> f.attachTo(AttachableType.COMMENT, comment.getCommentId()));
 
             return comment.getCommentId();
         }
@@ -196,11 +232,14 @@ public class CommentAppService {
                                 String replyMyReaction = memberId == null ? null :
                                         commentLikeService.getMyReaction(reply.getCommentId(), memberId)
                                                 .map(LikeType::name).orElse(null);
+                                List<FileMetaDataElement> replyAttachments = fileMetaDataRepository
+                                        .findByAttachableTypeAndAttachableId(AttachableType.COMMENT, reply.getCommentId())
+                                        .stream().map(FileMetaDataElement::new).collect(Collectors.toList());
                                 return ReplyResponse.toDto(reply,
                                         accountId != null && (reply.isWrittenBy(accountId)
                                                 || userRoles != null && post.getCategory().manageable(userRoles)),
                                         accountId != null && reply.getPost().isWrittenBy(accountId),
-                                        replyLikeCount, replyDislikeCount, replyMyReaction);
+                                        replyLikeCount, replyDislikeCount, replyMyReaction, replyAttachments);
                             }).collect(Collectors.toList());
 
                     int likeCount = commentLikeService.countLikes(comment.getCommentId());
@@ -208,15 +247,45 @@ public class CommentAppService {
                     String myReaction = memberId == null ? null :
                             commentLikeService.getMyReaction(comment.getCommentId(), memberId)
                                     .map(LikeType::name).orElse(null);
+                    List<FileMetaDataElement> commentAttachments = fileMetaDataRepository
+                            .findByAttachableTypeAndAttachableId(AttachableType.COMMENT, comment.getCommentId())
+                            .stream().map(FileMetaDataElement::new).collect(Collectors.toList());
 
                     return CommentListElement.toDto(
                             comment,
                             accountId != null && comment.isWrittenBy(accountId)
                                     || userRoles != null && post.getCategory().manageable(userRoles),
                             accountId != null && comment.getPost().isWrittenBy(accountId),
-                            subComments, likeCount, dislikeCount, myReaction);
+                            subComments, likeCount, dislikeCount, myReaction, commentAttachments);
                 }).collect(Collectors.toList());
 
+
+        // 작성자 프로필 이미지 일괄 조회
+        List<Long> authorIds = commentDtoList.stream()
+                .flatMap(c -> Stream.concat(
+                        c.getAuthor().getUserId() != null ? Stream.of(c.getAuthor().getUserId()) : Stream.empty(),
+                        c.getSubComments().stream()
+                                .filter(r -> r.getAuthor().getUserId() != null)
+                                .map(r -> r.getAuthor().getUserId())
+                )).distinct().collect(Collectors.toList());
+
+        if (!authorIds.isEmpty()) {
+            Map<Long, String> profileImageMap = fileMetaDataRepository
+                    .findByAttachableTypeAndAttachableIdIn(AttachableType.PROFILE, authorIds)
+                    .stream()
+                    .collect(Collectors.toMap(FileMetaData::getAttachableId, FileMetaData::getUrlPath, (a, b) -> a));
+
+            commentDtoList.forEach(c -> {
+                if (c.getAuthor().getUserId() != null) {
+                    c.getAuthor().setProfileImageUrl(profileImageMap.get(c.getAuthor().getUserId()));
+                }
+                c.getSubComments().forEach(r -> {
+                    if (r.getAuthor().getUserId() != null) {
+                        r.getAuthor().setProfileImageUrl(profileImageMap.get(r.getAuthor().getUserId()));
+                    }
+                });
+            });
+        }
 
         PaginationResponse paginationResponse = PaginationResponse.builder()
                 .totalCommentSize(commentPage.getTotalElements())

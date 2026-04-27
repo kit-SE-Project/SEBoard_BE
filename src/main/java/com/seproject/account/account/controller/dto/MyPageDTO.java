@@ -17,13 +17,15 @@ public class MyPageDTO {
         private Long userId;
         private String email;
         private List<String> roles;
+        private String profileImageUrl;
 
-        public static MyInfoResponse toDTO(Member findMember,Account account, List<String> roles) {
+        public static MyInfoResponse toDTO(Member findMember, Account account, List<String> roles, String profileImageUrl) {
             return builder()
                     .nickname(findMember.getName())
                     .email(account.getLoginId())
                     .roles(roles)
                     .userId(findMember.getBoardUserId())
+                    .profileImageUrl(profileImageUrl)
                     .build();
         }
     }

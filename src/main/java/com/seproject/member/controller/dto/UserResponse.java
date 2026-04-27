@@ -8,6 +8,7 @@ public class UserResponse {
 
     private Long userId;
     private String name;
+    private String profileImageUrl;
 
     public UserResponse(Long userId, String name) {
         this.userId = userId;

@@ -2,6 +2,7 @@ package com.seproject.board.comment.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.seproject.board.comment.domain.model.Reply;
+import com.seproject.file.controller.dto.FileMetaDataResponse.FileMetaDataElement;
 import com.seproject.member.controller.dto.UserResponse;
 import com.seproject.board.comment.domain.model.Comment;
 import lombok.AccessLevel;
@@ -9,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 public class CommentResponse {
@@ -74,10 +76,12 @@ public class CommentResponse {
         private int likeCount;
         private int dislikeCount;
         private String myReaction;
+        private List<FileMetaDataElement> attachments;
 
         public static CommentListElement toDto(Comment comment, boolean isAuthor, boolean isPostAuthor,
                                                List<ReplyResponse> subComments,
-                                               int likeCount, int dislikeCount, String myReaction){
+                                               int likeCount, int dislikeCount, String myReaction,
+                                               List<FileMetaDataElement> attachments){
             UserResponse userResponse = null;
             String contents = null;
             //TODO : dto에 로직이 들어가는게 맞나?
@@ -95,6 +99,9 @@ public class CommentResponse {
                 userResponse = new UserResponse(comment.getAuthor());
             }
 
+            boolean isVisible = !comment.isDeleted() && !comment.isReported()
+                    && (!comment.isOnlyReadByAuthor() || isAuthor || isPostAuthor);
+
             return builder()
                     .commentId(comment.getCommentId())
                     .author(userResponse)
@@ -108,6 +115,7 @@ public class CommentResponse {
                     .likeCount(likeCount)
                     .dislikeCount(dislikeCount)
                     .myReaction(myReaction)
+                    .attachments(isVisible && attachments != null ? attachments : Collections.emptyList())
                     .build();
         }
     }

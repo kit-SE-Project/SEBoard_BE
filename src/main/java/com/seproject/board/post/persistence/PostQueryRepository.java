@@ -7,7 +7,6 @@ import com.seproject.board.post.controller.PostSearchOptions;
 import com.seproject.board.post.controller.dto.PostResponse.RetrievePostListResponseElement;
 import com.seproject.board.post.domain.model.LikeType;
 import com.seproject.board.post.domain.model.Post;
-import com.seproject.file.domain.model.FileMetaData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.querydsl.core.types.Projections.constructor;
 import static com.seproject.board.menu.domain.model.QCategory.category;
@@ -44,9 +42,6 @@ public class PostQueryRepository {
                 )
                 .fetchOne();
 
-        if(findPost!=null){
-            Set<FileMetaData> attachments = findPost.getAttachments();
-        }
         return Optional.ofNullable(findPost);
     }
 

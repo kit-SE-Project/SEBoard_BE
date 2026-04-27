@@ -11,5 +11,6 @@ public class ProfileResponse {
         private Integer postCount;
         private Integer commentCount;
         private Integer bookmarkCount;
+        private String profileImageUrl;
     }
 }

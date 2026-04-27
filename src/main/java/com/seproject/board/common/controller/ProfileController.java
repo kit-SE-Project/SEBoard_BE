@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/profile")
@@ -43,6 +44,20 @@ public class ProfileController {
 
         Page<RetrievePostListResponseElement> res = profileAppService.retrieveBookmarkPost(memberId, page, perPage);
         return ResponseEntity.ok().body(res);
+    }
+
+    @Operation(summary = "프로필 이미지 업로드")
+    @PutMapping("/image")
+    public ResponseEntity<String> uploadProfileImage(@RequestPart MultipartFile file) {
+        String imageUrl = profileAppService.uploadProfileImage(file);
+        return ResponseEntity.ok(imageUrl);
+    }
+
+    @Operation(summary = "프로필 이미지 삭제")
+    @DeleteMapping("/image")
+    public ResponseEntity<Void> deleteProfileImage() {
+        profileAppService.deleteProfileImage();
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "사용자가 작성한 댓글 목록 조회")

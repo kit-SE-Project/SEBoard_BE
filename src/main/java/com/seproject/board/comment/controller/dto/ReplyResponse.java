@@ -1,6 +1,7 @@
 package com.seproject.board.comment.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.seproject.file.controller.dto.FileMetaDataResponse.FileMetaDataElement;
 import com.seproject.member.controller.dto.UserResponse;
 import com.seproject.board.comment.domain.model.Reply;
 import lombok.AccessLevel;
@@ -8,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 @Data
 @Builder(access = AccessLevel.PRIVATE)
@@ -27,9 +30,11 @@ public class ReplyResponse {
     private int likeCount;
     private int dislikeCount;
     private String myReaction;
+    private List<FileMetaDataElement> attachments;
 
     public static ReplyResponse toDto(Reply reply, boolean isAuthor, boolean isPostAuthor,
-                                      int likeCount, int dislikeCount, String myReaction){
+                                      int likeCount, int dislikeCount, String myReaction,
+                                      List<FileMetaDataElement> attachments){
         UserResponse userResponse = null;
         String contents = null;
         //TODO : dto에 로직이 들어가는게 맞나?
@@ -48,6 +53,9 @@ public class ReplyResponse {
             userResponse = new UserResponse(reply.getAuthor());
         }
 
+        boolean isVisible = !reply.isDeleted() && !reply.isReported()
+                && (!reply.isOnlyReadByAuthor() || isAuthor || isPostAuthor);
+
         return builder()
                 .commentId(reply.getCommentId())
                 .tag(reply.getTag().getCommentId())
@@ -61,6 +69,7 @@ public class ReplyResponse {
                 .likeCount(likeCount)
                 .dislikeCount(dislikeCount)
                 .myReaction(myReaction)
+                .attachments(isVisible && attachments != null ? attachments : Collections.emptyList())
                 .build();
     }
 }

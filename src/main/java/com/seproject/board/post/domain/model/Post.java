@@ -4,7 +4,6 @@ import com.seproject.account.account.domain.Account;
 import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.comment.domain.model.Comment;
 import com.seproject.board.common.BaseTime;
-import com.seproject.file.domain.model.FileMetaData;
 import com.seproject.board.common.domain.ReportThreshold;
 import com.seproject.board.common.Status;
 import com.seproject.board.post.domain.model.exposeOptions.ExposeOption;
@@ -18,8 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -47,9 +44,6 @@ public class Post {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "expose_option_id")
     private ExposeOption exposeOption;
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "post_id")
-    private Set<FileMetaData> attachments = new HashSet<>();
     private int anonymousCount;
     private int reportCount;
     @Enumerated(EnumType.STRING)
@@ -117,23 +111,6 @@ public class Post {
     public void changePin(boolean pinState) {
         this.pined = pinState;
         baseTime.modify();
-    }
-
-    public void addAttachment(FileMetaData attachment) {
-        attachments.add(attachment);
-        baseTime.modify();
-    }
-    public void removeAttachment(FileMetaData attachment){
-        attachments.remove(attachment);
-        baseTime.modify();
-    }
-
-    public Set<FileMetaData> getAttachments() {
-        return new HashSet<>(attachments);
-    }
-
-    public boolean hasAttachments(){
-        return !attachments.isEmpty();
     }
 
     public void delete(boolean isPermanent) {

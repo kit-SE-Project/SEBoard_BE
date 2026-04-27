@@ -2,6 +2,7 @@ package com.seproject.board.post.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.seproject.file.controller.dto.FileMetaDataResponse.FileMetaDataListResponse;
+import com.seproject.file.domain.model.FileMetaData;
 import com.seproject.board.comment.controller.dto.PaginationResponse;
 import com.seproject.member.controller.dto.UserResponse;
 import com.seproject.board.menu.domain.model.Category;
@@ -12,7 +13,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PostResponse {
@@ -38,7 +38,7 @@ public class PostResponse {
             this.views = post.getViews();
             this.createdAt = post.getBaseTime().getCreatedAt();
             this.modifiedAt = post.getBaseTime().getModifiedAt();
-            this.hasAttachment = post.hasAttachments();
+            this.hasAttachment = false; // attachments는 FileMetaData 테이블에서 별도 조회
             this.pined = post.isPined();
         }
     }
@@ -96,7 +96,7 @@ public class PostResponse {
         private String myReaction;
 
 
-        public RetrievePostDetailResponse(Post post) {
+        public RetrievePostDetailResponse(Post post, List<FileMetaData> attachmentList) {
             this.postId = post.getPostId();
             this.title = post.getTitle();
             this.contents = post.getContents();
@@ -106,7 +106,7 @@ public class PostResponse {
             this.createdAt = post.getBaseTime().getCreatedAt();
             this.modifiedAt = post.getBaseTime().getModifiedAt();
             this.exposeType = post.getExposeOption().getExposeState().toString();
-            this.attachments = new FileMetaDataListResponse(new ArrayList<>(post.getAttachments()));
+            this.attachments = new FileMetaDataListResponse(attachmentList);
             this.isPined = post.isPined();
         }
     }

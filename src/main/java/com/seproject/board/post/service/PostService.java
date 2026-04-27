@@ -7,13 +7,11 @@ import com.seproject.board.post.domain.model.exposeOptions.ExposeOption;
 import com.seproject.board.post.domain.repository.PostRepository;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.NoSuchResourceException;
-import com.seproject.file.domain.model.FileMetaData;
 import com.seproject.member.domain.BoardUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -44,7 +42,7 @@ public class PostService {
                            Category category,
                            BoardUser author,
                            BaseTime now,
-                           boolean isPined, HashSet<FileMetaData> attachments, ExposeOption exposeOption) {
+                           boolean isPined, ExposeOption exposeOption) {
 
         Post post = Post.builder()
                 .title(title)
@@ -53,7 +51,6 @@ public class PostService {
                 .author(author)
                 .baseTime(now)
                 .pined(isPined)
-                .attachments(attachments)
                 .exposeOption(exposeOption)
                 .build();
 

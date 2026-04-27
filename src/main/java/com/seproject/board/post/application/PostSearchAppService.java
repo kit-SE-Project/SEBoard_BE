@@ -12,6 +12,9 @@ import com.seproject.board.post.service.BookmarkService;
 import com.seproject.board.post.service.PostLikeService;
 import com.seproject.board.post.service.PostService;
 import com.seproject.error.errorCode.ErrorCode;
+import com.seproject.file.domain.model.AttachableType;
+import com.seproject.file.domain.model.FileMetaData;
+import com.seproject.file.domain.repository.FileMetaDataRepository;
 import com.seproject.error.exception.*;
 import com.seproject.board.post.controller.dto.PostResponse.RetrievePostDetailResponse;
 import com.seproject.board.post.controller.dto.PostResponse.RetrievePostListResponseElement;
@@ -49,6 +52,7 @@ public class PostSearchAppService {
     private final PostService postService;
     private final BookmarkService bookmarkService;
     private final PostLikeService postLikeService;
+    private final FileMetaDataRepository fileMetaDataRepository;
 
 
     @Transactional // TODO : 조회수 늘리기 다른 방법으로 변경
@@ -57,7 +61,15 @@ public class PostSearchAppService {
         Post post = postQueryRepository.findByIdWithAll(postId)
                 .orElseThrow(() -> new NoSuchResourceException(ErrorCode.NOT_EXIST_POST));
         Category category = post.getCategory();
-        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post);
+        List<FileMetaData> attachments = fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.POST, postId);
+        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post, attachments);
+
+        // 게시글 작성자 프로필 이미지 세팅
+        if (!post.getAuthor().isAnonymous()) {
+            fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.PROFILE, post.getAuthor().getBoardUserId())
+                    .stream().findFirst()
+                    .ifPresent(f -> postDetailResponse.getAuthor().setProfileImageUrl(f.getUrlPath()));
+        }
 
         boolean isEditable = false;
         boolean isBookmarked = false;
@@ -125,7 +137,15 @@ public class PostSearchAppService {
         }
 
         Category category = post.getCategory();
-        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post);
+        List<FileMetaData> attachments = fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.POST, postId);
+        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post, attachments);
+
+        // 게시글 작성자 프로필 이미지 세팅 (비밀글)
+        if (!post.getAuthor().isAnonymous()) {
+            fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.PROFILE, post.getAuthor().getBoardUserId())
+                    .stream().findFirst()
+                    .ifPresent(f -> postDetailResponse.getAuthor().setProfileImageUrl(f.getUrlPath()));
+        }
 
         boolean isEditable = false;
         boolean isBookmarked = false;
