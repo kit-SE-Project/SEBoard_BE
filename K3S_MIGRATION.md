@@ -1496,6 +1496,7 @@ kubectl rollout undo deployment/seboard-backend --to-revision=2 -n seboard
 ### Phase 0 - 사전 준비
 - [ ] `application-prod.yml` 작성 (환경변수 참조)
 - [ ] `.gitignore` 수정 (application-prod.yml 허용)
+- [ ] Spring Boot 파일 서빙 기능 추가 (`GET /files/**` → PVC 경로에서 서빙, 현재 Nginx가 담당하는 역할)
 - [ ] 백엔드 `Dockerfile` 멀티스테이지 빌드 작성
 - [ ] 로컬 `docker run`으로 Spring Boot 정상 기동 확인
 - [ ] 프론트엔드 `Dockerfile` + `nginx.conf` 작성
