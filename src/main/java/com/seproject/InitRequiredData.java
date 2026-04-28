@@ -25,7 +25,14 @@ import com.seproject.board.menu.domain.repository.BoardMenuRepository;
 import com.seproject.board.menu.domain.repository.CategoryRepository;
 import com.seproject.file.domain.model.FileExtension;
 import com.seproject.file.domain.repository.FileExtensionRepository;
+import com.seproject.member.application.TierBatchService;
 import com.seproject.member.domain.Member;
+import com.seproject.member.domain.model.Frame;
+import com.seproject.member.domain.model.FrameType;
+import com.seproject.member.domain.model.MemberFrame;
+import com.seproject.member.domain.model.Tier;
+import com.seproject.member.domain.repository.FrameRepository;
+import com.seproject.member.domain.repository.MemberFrameRepository;
 import com.seproject.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +74,9 @@ public class InitRequiredData {
         private final DashBoardMenuAuthorizationRepository dashBoardMenuAuthorizationRepository;
         private final FileExtensionRepository fileExtensionRepository;
         private final ReportThresholdRepository reportThresholdRepository;
+        private final FrameRepository frameRepository;
+        private final MemberFrameRepository memberFrameRepository;
+        private final TierBatchService tierBatchService;
 
         @Value("${system_account.password}")
         private String systemPassword;
@@ -74,12 +84,76 @@ public class InitRequiredData {
         public void init() {
             log.info("==================== required data init start ===================");
             initRole();
+            initRoleBadge();
             initBoardMenu();
             initSystemAccount();
             initAdminDashBoard();
             initFileExtension();
             initReportThreshold();
+            initTierFrames();
+            tierBatchService.updateTiersAndGrantFrames();
+            initSystemMemberTier();
             log.info("==================== required data init end ===================");
+        }
+
+        private void initRoleBadge() {
+            // 서버 기동 시마다 기본 역할의 배지 설정을 보장 (컬럼이 null이면 덮어씀)
+            roleRepository.findByName(Role.ROLE_ADMIN)
+                    .ifPresent(r -> r.updateBadge("CHECK", 1));
+            roleRepository.findByName(Role.ROLE_KUMOH)
+                    .ifPresent(r -> r.updateBadge("KUMOH_CROW", 2));
+            roleRepository.findByName(Role.ROLE_USER)
+                    .ifPresent(r -> r.updateBadge(null, 3));
+            log.info("Role badge settings initialized");
+        }
+
+        private void initSystemMemberTier() {
+            memberRepository.findByLoginId("system").ifPresent(member -> {
+                member.updateTierAndScore(1500L);   // 다이아몬드 기준 점수
+                for (Tier tier : Tier.values()) {
+                    String frameName = tierFrameName(tier);
+                    frameRepository.findByName(frameName).ifPresent(frame -> {
+                        if (!memberFrameRepository.existsByMemberAndFrame(member, frame)) {
+                            memberFrameRepository.save(MemberFrame.builder()
+                                    .member(member)
+                                    .frame(frame)
+                                    .build());
+                        }
+                    });
+                }
+                log.info("System account set to Diamond with all tier frames");
+            });
+        }
+
+        private String tierFrameName(Tier tier) {
+            switch (tier) {
+                case BRONZE:   return "브론즈 프레임";
+                case SILVER:   return "실버 프레임";
+                case GOLD:     return "골드 프레임";
+                case PLATINUM: return "플래티넘 프레임";
+                case DIAMOND:  return "다이아몬드 프레임";
+                default:       return "";
+            }
+        }
+
+        private void initTierFrames() {
+            createFrameIfAbsent("브론즈 프레임", "브론즈 등급 달성 보상", "#CD7F32", "#8B4513", FrameType.TIER);
+            createFrameIfAbsent("실버 프레임",   "실버 등급 달성 보상",   "#C0C0C0", "#808080", FrameType.TIER);
+            createFrameIfAbsent("골드 프레임",   "골드 등급 달성 보상",   "#FFD700", "#FFA500", FrameType.TIER);
+            createFrameIfAbsent("플래티넘 프레임","플래티넘 등급 달성 보상","#85C1E9", "#5DADE2", FrameType.TIER);
+            createFrameIfAbsent("다이아몬드 프레임","다이아몬드 등급 달성 보상","#B9F2FF","#C9B1FF", FrameType.TIER);
+        }
+
+        private void createFrameIfAbsent(String name, String description, String gradientStart, String gradientEnd, FrameType type) {
+            if (!frameRepository.existsByName(name)) {
+                frameRepository.save(Frame.builder()
+                        .name(name)
+                        .description(description)
+                        .gradientStart(gradientStart)
+                        .gradientEnd(gradientEnd)
+                        .frameType(type)
+                        .build());
+            }
         }
 
         private void initFileExtension() {

@@ -17,35 +17,28 @@ public class RoleDTO {
         private String description;
         private String alias;
         private boolean immutable;
+        private String badgeType;
+        private Integer badgePriority;
 
-        @Builder(access = AccessLevel.PRIVATE)
-        public RoleResponse(Long accountId, Long roleId, String name, String description, String alias,boolean immutable) {
-            this.accountId = accountId;
-            this.roleId = roleId;
-            this.name = name;
-            this.description = description;
-            this.alias = alias;
-            this.immutable = immutable;
-        }
-
-        @Builder(access = AccessLevel.PRIVATE)
+        // QueryDSL Projections.constructor 용
         public RoleResponse(Long accountId, Long roleId, String name, String description, String alias) {
             this.accountId = accountId;
             this.roleId = roleId;
             this.name = name;
             this.description = description;
             this.alias = alias;
-            this.immutable = Role.isImmutable(name);
         }
 
         public static RoleResponse of(Role role) {
-            return builder()
-                    .roleId(role.getId())
-                    .name(role.getAuthority())
-                    .description(role.getDescription())
-                    .immutable(role.isImmutable())
-                    .alias(role.toString())
-                    .build();
+            RoleResponse res = new RoleResponse();
+            res.roleId = role.getId();
+            res.name = role.getAuthority();
+            res.description = role.getDescription();
+            res.alias = role.toString();
+            res.immutable = role.isImmutable();
+            res.badgeType = role.getBadgeType();
+            res.badgePriority = role.getBadgePriority();
+            return res;
         }
     }
 
@@ -54,6 +47,8 @@ public class RoleDTO {
         private String name;
         private String description;
         private String alias;
+        private String badgeType;
+        private Integer badgePriority;
     }
 
     @Data
@@ -61,6 +56,8 @@ public class RoleDTO {
         private String name;
         private String description;
         private String alias;
+        private String badgeType;
+        private Integer badgePriority;
     }
 
     @Data

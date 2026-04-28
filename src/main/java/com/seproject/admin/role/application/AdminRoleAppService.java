@@ -62,7 +62,8 @@ public class AdminRoleAppService {
     public Long createRole(CreateRoleRequest request) {
         checkAuthorization(List.of(DashBoardMenu.ROLE_MANAGE_URL));
 
-        return roleService.createRole(request.getName(), request.getDescription(), request.getAlias());
+        return roleService.createRole(request.getName(), request.getDescription(), request.getAlias(),
+                request.getBadgeType(), request.getBadgePriority());
     }
 
     @Transactional
@@ -77,7 +78,8 @@ public class AdminRoleAppService {
         checkAuthorization(List.of(DashBoardMenu.ROLE_MANAGE_URL));
 
         //TODO
-        roleService.updateRole(roleId,request.getName(),request.getDescription(),request.getAlias());
+        roleService.updateRole(roleId, request.getName(), request.getDescription(), request.getAlias(),
+                request.getBadgeType(), request.getBadgePriority());
     }
 
 

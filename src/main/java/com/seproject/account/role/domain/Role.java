@@ -32,6 +32,16 @@ public class Role implements GrantedAuthority {
     private String description;
     private String alias;
 
+    /** "CHECK" | "KUMOH_CROW" | null */
+    @Getter
+    @Column(name = "badge_type")
+    private String badgeType;
+
+    /** 낮을수록 우선순위 높음, 복수 역할 보유 시 가장 낮은 값의 배지 표시 */
+    @Getter
+    @Column(name = "badge_priority")
+    private Integer badgePriority;
+
     public static boolean isImmutable(String name) {
         return IMMUTABLE_ROLES.contains(name);
     }
@@ -72,7 +82,12 @@ public class Role implements GrantedAuthority {
         this.name = name;
         this.description = description;
         this.alias = alias;
+        return this;
+    }
 
+    public Role updateBadge(String badgeType, Integer badgePriority) {
+        this.badgeType = badgeType;
+        this.badgePriority = badgePriority;
         return this;
     }
 

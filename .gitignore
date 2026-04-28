@@ -37,5 +37,9 @@ out/
 .vscode/
 
 *.yml
+# prod 설정은 환경변수 플레이스홀더만 있으므로 커밋 허용
+!src/main/resources/application-prod.yml
+# GitHub Actions 워크플로우 허용
+!.github/**/*.yml
 
 .DS_Store

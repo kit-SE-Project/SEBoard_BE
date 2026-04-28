@@ -13,6 +13,10 @@ import com.seproject.board.comment.domain.repository.CommentRepository;
 import com.seproject.board.comment.domain.repository.CommentSearchRepository;
 import com.seproject.board.post.domain.repository.BookmarkRepository;
 import com.seproject.board.post.domain.repository.PostSearchRepository;
+import com.seproject.account.role.domain.Role;
+import com.seproject.board.common.controller.dto.ProfileResponse.FrameInfo;
+import com.seproject.member.domain.model.Frame;
+import com.seproject.member.domain.model.Tier;
 import com.seproject.file.domain.model.AttachableType;
 import com.seproject.file.domain.model.FileMetaData;
 import com.seproject.file.domain.repository.FileMetaDataRepository;
@@ -69,13 +73,32 @@ public class ProfileAppService {
                 .findByAttachableTypeAndAttachableId(AttachableType.PROFILE, memberId);
         String profileImageUrl = profileImages.isEmpty() ? null : profileImages.get(0).getUrlPath();
 
+        Frame equippedFrame = member.getEquippedFrame();
+        FrameInfo frameInfo = equippedFrame != null ? new FrameInfo(equippedFrame) : null;
+
+        String[] badge = resolveBadge(memberAccount.getRoles());
+
         return ProfileInfoResponse.builder()
                 .nickname(nickname)
                 .postCount(postCount)
                 .commentCount(commentCount)
                 .bookmarkCount(bookmarkCount)
                 .profileImageUrl(profileImageUrl)
+                .tier(member.getTier() != null ? member.getTier().name() : Tier.BRONZE.name())
+                .activityScore(member.getActivityScore() != null ? member.getActivityScore() : 0L)
+                .equippedFrame(frameInfo)
+                .badgeType(badge[0])
+                .badgeLabel(badge[1])
                 .build();
+    }
+
+    /** @return [badgeType, badgeLabel] - 둘 다 null 가능 */
+    private static String[] resolveBadge(java.util.List<Role> roles) {
+        return roles.stream()
+                .filter(r -> r.getBadgeType() != null && r.getBadgePriority() != null)
+                .min(java.util.Comparator.comparingInt(Role::getBadgePriority))
+                .map(r -> new String[]{r.getBadgeType(), r.toString()})
+                .orElse(new String[]{null, null});
     }
 
     @Transactional

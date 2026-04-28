@@ -3,7 +3,10 @@ package com.seproject.board.common.controller;
 import com.seproject.board.common.application.ProfileAppService;
 import com.seproject.board.comment.controller.dto.CommentResponse.RetrieveCommentProfileElement;
 import com.seproject.board.post.controller.dto.PostResponse.RetrievePostListResponseElement;
+import com.seproject.board.common.controller.dto.ProfileResponse.MemberFrameInfo;
 import com.seproject.board.common.controller.dto.ProfileResponse.ProfileInfoResponse;
+import com.seproject.member.application.FrameAppService;
+import com.seproject.member.domain.model.MemberFrame;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,11 +14,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/profile")
 @RequiredArgsConstructor
 public class ProfileController {
     private final ProfileAppService profileAppService;
+    private final FrameAppService frameAppService;
 
     @Operation(summary = "프로필 정보 조회")
     @GetMapping("/{memberId}")
@@ -57,6 +64,30 @@ public class ProfileController {
     @DeleteMapping("/image")
     public ResponseEntity<Void> deleteProfileImage() {
         profileAppService.deleteProfileImage();
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "내 프레임 보관함 조회")
+    @GetMapping("/frames")
+    public ResponseEntity<List<MemberFrameInfo>> getMyFrames() {
+        List<MemberFrame> frames = frameAppService.getMyFrames();
+        List<MemberFrameInfo> result = frames.stream()
+                .map(MemberFrameInfo::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "프레임 장착")
+    @PutMapping("/frame/{frameId}")
+    public ResponseEntity<Void> equipFrame(@PathVariable Long frameId) {
+        frameAppService.equipFrame(frameId);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "프레임 해제")
+    @DeleteMapping("/frame")
+    public ResponseEntity<Void> unequipFrame() {
+        frameAppService.unequipFrame();
         return ResponseEntity.ok().build();
     }
 

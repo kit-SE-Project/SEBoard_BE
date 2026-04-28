@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
+
+    @Query("select count(p) from Post p where p.author.boardUserId = :memberId and p.status = 'NORMAL'")
+    long countByAuthorId(@Param("memberId") Long memberId);
     @Query(value = "select exists(select * from posts where category_id = :categoryId)", nativeQuery = true)
     boolean existsByCategoryId(@Param("categoryId") Long categoryId);
 

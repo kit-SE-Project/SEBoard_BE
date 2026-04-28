@@ -1,0 +1,92 @@
+server:
+  port: 8080
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://kauth.kakao.com/.well-known/jwks.json
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-authentication-method: POST
+            authorization-grant-type: authorization_code
+            client-name: 카카오
+            redirect-uri: ${KAKAO_REDIRECT_URI}
+            scope: openid,profile_nickname,account_email
+        provider:
+          kakao:
+            issuer-uri: https://kauth.kakao.com
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            jwk-set-uri: https://kauth.kakao.com/.well-known/jwks.json
+            user-name-attribute: id
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 30MB
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT:6379}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  header: "Authorization"
+  expiration_time: 10
+  token_prefix: "Bearer"
+
+mail:
+  host: "smtp.naver.com"
+  addr: "naver.com"
+  port: 587
+  username: ${MAIL_USERNAME}
+  password: ${MAIL_PASSWORD}
+
+frontend:
+  url: ${FRONTEND_URL}
+
+system_account:
+  password: ${SYSTEM_ACCOUNT_PASSWORD}
+
+logging.level:
+  root: INFO
+  com.seproject: INFO
+
+storage:
+  rootPath: ${STORAGE_ROOT_PATH:/app/files}
+  urlRootPath: /files
+
+management:
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    loggers:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
