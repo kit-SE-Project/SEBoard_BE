@@ -406,16 +406,16 @@ sudo ufw enable
 
 # 고정 IP 설정 (/etc/netplan/00-installer-config.yaml)
 # 각 노드별로 IP 다르게 설정
-sudo tee /etc/netplan/00-installer-config.yaml <<EOF
+sudo vi /etc/netplan/00-installer-config.yaml <<EOF
 network:
   version: 2
   ethernets:
-    ens33:                  # 실제 NIC 이름으로 교체 (ip addr 명령으로 확인)
+    enp74s0:                  # 실제 NIC 이름으로 교체 (ip addr 명령으로 확인)
       dhcp4: false
-      addresses: [192.168.0.10/24]   # 각 노드 IP
-      gateway4: 192.168.0.1
+      addresses: [192.158.0.92/24]   # 각 노드 IP
+      gateway4: 192.158.0.200
       nameservers:
-        addresses: [8.8.8.8, 1.1.1.1]
+        addresses: [192.158.0.200]
 EOF
 sudo netplan apply
 ```
@@ -427,7 +427,7 @@ sudo netplan apply
 curl -sfL https://get.k3s.io | sh -s - \
   --write-kubeconfig-mode 644 \
   --disable traefik \
-  --node-ip 192.168.0.10
+  --node-ip 192.158.0.86
 
 # 설치 확인
 sudo kubectl get nodes
@@ -645,8 +645,8 @@ kubectl create configmap seboard-config \
   --from-literal=DB_USERNAME='se' \
   --from-literal=REDIS_HOST='redis.seboard.svc.cluster.local' \
   --from-literal=REDIS_PORT='6379' \
-  --from-literal=FRONTEND_URL='https://se-board.kumoh.ac.kr' \
-  --from-literal=KAKAO_REDIRECT_URI='https://se-board.kumoh.ac.kr/login/oauth2/code/kakao' \
+  --from-literal=FRONTEND_URL='https://seboard.site' \
+  --from-literal=KAKAO_REDIRECT_URI='https://seboard.site/login/oauth2/code/kakao' \
   --from-literal=STORAGE_ROOT_PATH='/app/files'
 ```
 
@@ -928,49 +928,43 @@ spec:
 
 ```yaml
 # k8s/ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: seboard-ingress
-  namespace: seboard
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "30m"        # 파일 업로드 크기
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: se-board.kumoh.ac.kr   # 실제 도메인으로 교체
-      http:
-        paths:
-          - path: /v1               # API 요청 (Spring Boot의 API prefix)
-            pathType: Prefix
-            backend:
-              service:
-                name: seboard-backend
-                port:
-                  number: 8080
-          - path: /files            # 파일 서빙
-            pathType: Prefix
-            backend:
-              service:
-                name: seboard-backend
-                port:
-                  number: 8080
-          - path: /actuator         # Prometheus 스크랩용 (외부 차단 원하면 별도 처리)
-            pathType: Prefix
-            backend:
-              service:
-                name: seboard-backend
-                port:
-                  number: 8080
-          - path: /                 # 나머지는 프론트엔드
-            pathType: Prefix
-            backend:
-              service:
-                name: seboard-frontend
-                port:
-                  number: 80
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: seboard-ingress
+    namespace: seboard
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "300m"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+  spec:
+    ingressClassName: nginx
+    rules:
+      - host: se-board.kumoh.ac.kr
+        http:
+          paths:
+            - path: /v1
+              pathType: Prefix
+              backend:
+                service:
+                  name: seboard-backend
+                  port:
+                    number: 8080
+            - path: /files
+              pathType: Prefix
+              backend:
+                service:
+                  name: seboard-backend
+                  port:
+                    number: 8080
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: seboard-frontend
+                  port:
+                    number: 80
+
 ```
 
 ### 4-7. 배포 적용

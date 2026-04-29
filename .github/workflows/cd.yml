@@ -63,7 +63,9 @@ jobs:
 
       - name: Get image SHA tag
         id: vars
-        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "image_name=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -73,6 +75,6 @@ jobs:
           key: ${{ secrets.K3S_SSH_KEY }}
           script: |
             kubectl set image deployment/seboard-backend \
-              seboard-backend=ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.sha }} \
+              seboard-backend=ghcr.io/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.sha }} \
               -n seboard
             kubectl rollout status deployment/seboard-backend -n seboard --timeout=180s
