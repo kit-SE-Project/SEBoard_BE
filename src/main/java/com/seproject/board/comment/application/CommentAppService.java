@@ -37,6 +37,8 @@ import com.seproject.error.exception.InvalidAuthorizationException;
 import com.seproject.member.domain.BoardUser;
 import com.seproject.member.service.AnonymousService;
 import com.seproject.member.service.MemberService;
+import com.seproject.notification.NotificationEventDto;
+import com.seproject.notification.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -68,6 +70,7 @@ public class CommentAppService {
     private final FileRepository fileRepository;
 
     private final SpamWordRepository spamWordRepository;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     private static final int MAX_COMMENT_ATTACHMENTS = 5;
 
@@ -108,7 +111,29 @@ public class CommentAppService {
 
         Long commentId = commentService.createComment(post, author, contents, onlyReadByAuthor);
         attachments.forEach(f -> f.attachTo(AttachableType.COMMENT, commentId));
+
+        publishCommentNotification(post, account);
+
         return commentId;
+    }
+
+    private void publishCommentNotification(Post post, Account commenter) {
+        try {
+            if (post.getAuthor().isAnonymous()) return;
+            Long postAuthorId = post.getAuthor().getAccount().getAccountId();
+            if (postAuthorId.equals(commenter.getAccountId())) return;
+
+            notificationEventPublisher.publish(NotificationEventDto.builder()
+                .type("COMMENT")
+                .receiverId(postAuthorId)
+                .actorName(commenter.getName())
+                .relatedId(post.getPostId())
+                .title(post.getTitle())
+                .content(commenter.getName() + "님이 댓글을 달았습니다.")
+                .build());
+        } catch (Exception e) {
+            log.warn("댓글 알림 발행 실패", e);
+        }
     }
 
     private void checkSpamWord(String contents) {

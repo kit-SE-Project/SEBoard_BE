@@ -12,12 +12,16 @@ import com.seproject.error.exception.CustomUserNotFoundException;
 import com.seproject.error.exception.NoSuchResourceException;
 import com.seproject.member.domain.Member;
 import com.seproject.member.domain.repository.MemberRepository;
+import com.seproject.notification.NotificationEventDto;
+import com.seproject.notification.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,6 +31,7 @@ public class PostLikeAppService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final AccountRepository accountRepository;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     /**
      * 추천 또는 비추천 토글
@@ -54,6 +59,9 @@ public class PostLikeAppService {
                     .likeType(requestType)
                     .build();
             postLikeRepository.save(postLike);
+            if (requestType == LikeType.LIKE) {
+                publishLikeNotification(post, account);
+            }
             return requestType;
         }
 
@@ -66,5 +74,24 @@ public class PostLikeAppService {
 
         postLike.changeLikeType(requestType);
         return requestType;
+    }
+
+    private void publishLikeNotification(Post post, Account liker) {
+        try {
+            if (post.getAuthor().isAnonymous()) return;
+            Long postAuthorId = post.getAuthor().getAccount().getAccountId();
+            if (postAuthorId.equals(liker.getAccountId())) return;
+
+            notificationEventPublisher.publish(NotificationEventDto.builder()
+                .type("POST_LIKE")
+                .receiverId(postAuthorId)
+                .actorName(liker.getName())
+                .relatedId(post.getPostId())
+                .title(post.getTitle())
+                .content(liker.getName() + "님이 좋아요를 눌렀습니다.")
+                .build());
+        } catch (Exception e) {
+            log.warn("좋아요 알림 발행 실패", e);
+        }
     }
 }

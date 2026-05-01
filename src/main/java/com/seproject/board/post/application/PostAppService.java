@@ -30,7 +30,10 @@ import com.seproject.member.domain.Anonymous;
 import com.seproject.member.domain.BoardUser;
 import com.seproject.member.service.AnonymousService;
 import com.seproject.member.service.MemberService;
+import com.seproject.notification.NotificationEventDto;
+import com.seproject.notification.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +43,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -58,6 +62,7 @@ public class PostAppService {
     private final CommentRepository commentRepository;
 
     private final PostSyncService postSyncAppService;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     @Transactional
     public Long writePost(PostWriteCommand command){
@@ -117,7 +122,27 @@ public class PostAppService {
             postSyncAppService.exportNewPost(category.getSuperMenu().getUrlInfo(), postId, title, contents, author.getName());
         }
 
+        publishNewPostNotification(postId, title, category);
+
         return postId;
+    }
+
+    private void publishNewPostNotification(Long postId, String title, Category category) {
+        try {
+            Long boardMenuId = category.getSuperMenu() != null
+                ? category.getSuperMenu().getMenuId()
+                : category.getMenuId();
+
+            notificationEventPublisher.publish(NotificationEventDto.builder()
+                .type("NEW_POST")
+                .relatedId(postId)
+                .title(title)
+                .content("구독한 게시판에 새 글이 올라왔습니다.")
+                .boardMenuId(boardMenuId)
+                .build());
+        } catch (Exception e) {
+            log.warn("새 게시글 알림 발행 실패", e);
+        }
     }
 
     private void checkSpamWord(String title, String contents) {

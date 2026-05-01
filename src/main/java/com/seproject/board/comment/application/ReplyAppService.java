@@ -25,7 +25,10 @@ import com.seproject.error.exception.InvalidAuthorizationException;
 import com.seproject.member.domain.BoardUser;
 import com.seproject.member.service.AnonymousService;
 import com.seproject.member.service.MemberService;
+import com.seproject.notification.NotificationEventDto;
+import com.seproject.notification.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -48,6 +52,7 @@ public class ReplyAppService {
     private final FileRepository fileRepository;
 
     private final SpamWordRepository spamWordRepository;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     private static final int MAX_COMMENT_ATTACHMENTS = 5;
 
@@ -93,7 +98,29 @@ public class ReplyAppService {
 
         Long replyId = replyService.createReply(superComment, contents, taggedComment, author, onlyReadByAuthor);
         attachments.forEach(f -> f.attachTo(AttachableType.COMMENT, replyId));
+
+        publishReplyNotification(superComment, post, account);
+
         return replyId;
+    }
+
+    private void publishReplyNotification(Comment superComment, Post post, Account replier) {
+        try {
+            if (superComment.getAuthor().isAnonymous()) return;
+            Long commentAuthorId = superComment.getAuthor().getAccount().getAccountId();
+            if (commentAuthorId.equals(replier.getAccountId())) return;
+
+            notificationEventPublisher.publish(NotificationEventDto.builder()
+                .type("REPLY")
+                .receiverId(commentAuthorId)
+                .actorName(replier.getName())
+                .relatedId(post.getPostId())
+                .title(post.getTitle())
+                .content(replier.getName() + "님이 대댓글을 달았습니다.")
+                .build());
+        } catch (Exception e) {
+            log.warn("대댓글 알림 발행 실패", e);
+        }
     }
 
     private void checkSpamWord(String contents) {
