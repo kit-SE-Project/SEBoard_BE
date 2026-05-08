@@ -2,6 +2,9 @@ package com.seproject.board.common.application;
 
 import com.seproject.account.account.domain.Account;
 import com.seproject.account.utils.SecurityUtils;
+import com.seproject.board.common.controller.dto.ProfileResponse.DeveloperProfileInfo;
+import com.seproject.developer.domain.DeveloperProfile;
+import com.seproject.developer.service.DeveloperProfileService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomAuthenticationException;
 import com.seproject.error.exception.InvalidAuthorizationException;
@@ -43,6 +46,7 @@ public class ProfileAppService {
     private final BookmarkRepository bookmarkRepository;
 
     private final MemberService memberService;
+    private final DeveloperProfileService developerProfileService;
     private final FileMetaDataRepository fileMetaDataRepository;
     private final FileRepository fileRepository;
 
@@ -78,6 +82,10 @@ public class ProfileAppService {
 
         String[] badge = resolveBadge(memberAccount.getRoles());
 
+        DeveloperProfileInfo developerProfileInfo = developerProfileService.findByAccount(memberAccount)
+                .map(DeveloperProfileInfo::new)
+                .orElse(null);
+
         return ProfileInfoResponse.builder()
                 .nickname(nickname)
                 .postCount(postCount)
@@ -89,6 +97,7 @@ public class ProfileAppService {
                 .equippedFrame(frameInfo)
                 .badgeType(badge[0])
                 .badgeLabel(badge[1])
+                .developerProfile(developerProfileInfo)
                 .build();
     }
 

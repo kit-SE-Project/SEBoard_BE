@@ -1584,3 +1584,5 @@ kubectl rollout undo deployment/seboard-backend --to-revision=2 -n seboard
 | **전체** | | **5~8일** |
 
 > AI 활용 시 삽질 시간 포함한 현실적인 예상치
+
+rsync -avz ~/seboard-files/ se@192.158.0.86:~/seboard-files/

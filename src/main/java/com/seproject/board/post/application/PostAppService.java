@@ -122,12 +122,12 @@ public class PostAppService {
             postSyncAppService.exportNewPost(category.getSuperMenu().getUrlInfo(), postId, title, contents, author.getName());
         }
 
-        publishNewPostNotification(postId, title, category);
+        publishNewPostNotification(postId, title, category, author.getAccount().getAccountId());
 
         return postId;
     }
 
-    private void publishNewPostNotification(Long postId, String title, Category category) {
+    private void publishNewPostNotification(Long postId, String title, Category category, Long authorAccountId) {
         try {
             Long boardMenuId = category.getSuperMenu() != null
                 ? category.getSuperMenu().getMenuId()
@@ -139,6 +139,7 @@ public class PostAppService {
                 .title(title)
                 .content("구독한 게시판에 새 글이 올라왔습니다.")
                 .boardMenuId(boardMenuId)
+                .authorId(authorAccountId)
                 .build());
         } catch (Exception e) {
             log.warn("새 게시글 알림 발행 실패", e);

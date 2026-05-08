@@ -3,6 +3,8 @@ package com.seproject.account.account.application;
 import com.seproject.account.account.controller.dto.MyPageDTO.MyInfoChangeRequest;
 import com.seproject.account.account.controller.dto.MyPageDTO.MyInfoChangeResponse;
 import com.seproject.account.account.controller.dto.MyPageDTO.MyInfoResponse;
+import com.seproject.board.common.controller.dto.ProfileResponse.DeveloperProfileInfo;
+import com.seproject.developer.service.DeveloperProfileService;
 import com.seproject.account.account.controller.dto.PasswordDTO.ResetPasswordResponse;
 import com.seproject.account.account.domain.Account;
 import com.seproject.account.account.service.AccountService;
@@ -150,6 +152,7 @@ public class AccountAppService {
     }
 
     private final MemberService memberService;
+    private final DeveloperProfileService developerProfileService;
     private final FileMetaDataRepository fileMetaDataRepository;
 
     public MyInfoResponse findMyPage() {
@@ -162,9 +165,13 @@ public class AccountAppService {
                 .findByAttachableTypeAndAttachableId(AttachableType.PROFILE, findMember.getBoardUserId())
                 .stream().findFirst().map(FileMetaData::getUrlPath).orElse(null);
 
+        DeveloperProfileInfo developerProfileInfo = developerProfileService.findByAccount(account)
+                .map(DeveloperProfileInfo::new)
+                .orElse(null);
+
         return MyInfoResponse.toDTO(findMember, account, account.getRoles().stream()
                 .map(Role::getAuthority)
-                .collect(Collectors.toList()), profileImageUrl);
+                .collect(Collectors.toList()), profileImageUrl, developerProfileInfo);
     }
 
     @Transactional

@@ -31,6 +31,8 @@ public class DashBoardMenu {
 
     public static final String GENERAL_URL = "/admin/general";
     public static final String MAIN_PAGE_MENU_MANAGE_URL = "/admin/mainPageMenu";
+    public static final String SKILL_MANAGE_URL = "/admin/skills";
+    public static final String RECRUIT_MANAGE_URL = "/admin/recruit";
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

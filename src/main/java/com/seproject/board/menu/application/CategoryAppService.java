@@ -94,10 +94,10 @@ public class CategoryAppService {
             if (menu.exposable(roles)) {
                 List<Menu> subMenus = subMenuMap.getOrDefault(menu.getMenuId(), Collections.emptyList());
 
-                CategoryResponse categoryResponse = new CategoryResponse(menu);
+                CategoryResponse categoryResponse = new CategoryResponse(menu, roles);
 
                 subMenus.stream()
-                        .map(CategoryResponse::new)
+                        .map(subMenu -> new CategoryResponse(subMenu, roles))
                         .forEach(categoryResponse::addSubMenu);
 
                 categoryResponses.add(categoryResponse);

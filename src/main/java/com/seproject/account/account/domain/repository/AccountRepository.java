@@ -25,4 +25,7 @@ public interface AccountRepository extends JpaRepository<Account,Long> {
     @Modifying
     @Query("update Account a set a.status = 'NORMAL' where a.accountId in :accountIds and a.status = 'TEMP_DELETED'")
     int restoreAllByIds(@Param("accountIds") List<Long> accountIds);
+
+    @Query("SELECT a.accountId FROM Account a WHERE a.status = 'NORMAL'")
+    List<Long> findAllActiveAccountIds();
 }

@@ -128,6 +128,10 @@ public class AdminMenuService {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new CustomIllegalArgumentException(ErrorCode.NOT_EXIST_MENU,null));
 
+        if(menu.getType().equals("RECRUIT")){
+            throw new CustomIllegalArgumentException(ErrorCode.CANNOT_DELETE_MENU,null);
+        }
+
         if(menu.getType().equals("MENU") || menu.getType().equals("BOARD")){
             if(menuRepository.existsSubMenuById(menuId)){
                 throw new CustomIllegalArgumentException(ErrorCode.CANNOT_DELETE_MENU,null);

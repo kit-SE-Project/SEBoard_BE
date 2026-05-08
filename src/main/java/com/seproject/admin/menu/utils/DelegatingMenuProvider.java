@@ -24,6 +24,7 @@ public class DelegatingMenuProvider extends AbstractMenuProvider {
                 new CategoryProvider(adminMenuService,menuService,roleService,authorizationService),
                 new BoardMenuProvider(adminMenuService,menuService,roleService,authorizationService),
                 new ExternalSiteMenuProvider(adminMenuService,menuService,roleService,authorizationService),
+                new RecruitMenuProvider(adminMenuService,menuService,roleService,authorizationService),
                 new MenuProvider(adminMenuService,menuService,roleService,authorizationService)
         );
     }

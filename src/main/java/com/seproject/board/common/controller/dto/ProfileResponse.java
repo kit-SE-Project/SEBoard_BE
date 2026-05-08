@@ -1,5 +1,6 @@
 package com.seproject.board.common.controller.dto;
 
+import com.seproject.developer.domain.DeveloperProfile;
 import com.seproject.member.domain.model.Frame;
 import com.seproject.member.domain.model.MemberFrame;
 import com.seproject.member.domain.model.Tier;
@@ -25,6 +26,38 @@ public class ProfileResponse {
         /** "CHECK" | "KUMOH_CROW" | null */
         private String badgeType;
         private String badgeLabel;
+        private DeveloperProfileInfo developerProfile;
+    }
+
+    @Data
+    public static class DeveloperProfileInfo {
+        private final Long id;
+        private final String intro;
+        private final String githubUrl;
+        private final String portfolioUrl;
+        private final String grade;
+        private final String readmeContent;
+        private final List<SkillInfo> skills;
+
+        public DeveloperProfileInfo(DeveloperProfile p) {
+            this.id = p.getId();
+            this.intro = p.getIntro();
+            this.githubUrl = p.getGithubUrl();
+            this.portfolioUrl = p.getPortfolioUrl();
+            this.grade = p.getGrade();
+            this.readmeContent = p.getReadmeContent();
+            this.skills = p.getSkillTags().stream()
+                    .map(s -> new SkillInfo(s.getId(), s.getName(), s.getCategory().name(), s.getIconSlug()))
+                    .collect(Collectors.toList());
+        }
+
+        @Data
+        public static class SkillInfo {
+            private final Long id;
+            private final String name;
+            private final String category;
+            private final String iconSlug;
+        }
     }
 
     @Data
