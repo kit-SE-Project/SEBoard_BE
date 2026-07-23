@@ -1,0 +1,15 @@
+{
+  "articleNo" : 90,
+  "postId" : 90,
+  "title" : "[Dummy Notice] Local test post 6",
+  "writer" : "Admin",
+  "createdAt" : "2026-07-15T09:20:39.81817",
+  "modifiedAt" : "2026-07-15T09:20:39.81817",
+  "views" : 36,
+  "categoryId" : 2,
+  "categoryName" : "일반",
+  "boardName" : "공지사항",
+  "contentsHtml" : "<p>This is dummy notice post 6 for local frontend testing.</p><p>Use this data to verify login, board list, and post detail pages.</p>",
+  "contentsText" : "This is dummy notice post 6 for local frontend testing. Use this data to verify login, board list, and post detail pages.",
+  "attachments" : [ ]
+}

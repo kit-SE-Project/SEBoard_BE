@@ -14,6 +14,7 @@ import com.seproject.admin.dashboard.domain.DashBoardMenuAuthorization;
 import com.seproject.admin.dashboard.domain.DashBoardMenuGroup;
 import com.seproject.admin.dashboard.domain.repository.DashBoardMenuAuthorizationRepository;
 import com.seproject.admin.dashboard.domain.repository.DashBoardMenuRepository;
+import com.seproject.admin.dashboard.service.AdminDashBoardServiceImpl;
 import com.seproject.admin.menu.domain.SelectOption;
 import com.seproject.board.common.Status;
 import com.seproject.board.common.domain.ReportThreshold;
@@ -49,7 +50,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -77,6 +80,7 @@ public class InitRequiredData {
         private final PasswordEncoder passwordEncoder;
         private final DashBoardMenuRepository dashBoardMenuRepository;
         private final DashBoardMenuAuthorizationRepository dashBoardMenuAuthorizationRepository;
+        private final AdminDashBoardServiceImpl adminDashBoardService;
         private final FileExtensionRepository fileExtensionRepository;
         private final ReportThresholdRepository reportThresholdRepository;
         private final FrameRepository frameRepository;
@@ -205,20 +209,56 @@ public class InitRequiredData {
             initAdminDashBoard("회원 그룹", DashBoardMenu.ROLE_MANAGE_URL, DashBoardMenuGroup.PERSON_GROUP);
             initAdminDashBoard("게시글 관리", DashBoardMenu.POST_MANAGE_URL, DashBoardMenuGroup.CONTENT_GROUP);
             initAdminDashBoard("댓글 관리", DashBoardMenu.COMMENT_MANAGE_URL, DashBoardMenuGroup.CONTENT_GROUP);
+            initAdminDashBoard(
+                    "학과 게시판 API 다운로드",
+                    DashBoardMenu.DEPARTMENT_BOARD_API_DOWNLOAD_URL,
+                    DashBoardMenuGroup.CONTENT_GROUP,
+                    "학과 게시판 수집",
+                    "/admin/department-board"
+            );
             initAdminDashBoard("첨부파일 관리", DashBoardMenu.FILE_MANAGE_URL, DashBoardMenuGroup.CONTENT_GROUP);
             initAdminDashBoard("휴지통", DashBoardMenu.TRASH_URL, DashBoardMenuGroup.CONTENT_GROUP);
             initAdminDashBoard("메인 페이지 설정", DashBoardMenu.MAIN_PAGE_MENU_MANAGE_URL, DashBoardMenuGroup.SETTING_GROUP);
             initAdminDashBoard("일반", DashBoardMenu.GENERAL_URL, DashBoardMenuGroup.SETTING_GROUP);
             initAdminDashBoard("스킬 태그 관리", DashBoardMenu.SKILL_MANAGE_URL, DashBoardMenuGroup.CONTENT_GROUP);
             initAdminDashBoard("구인구직 관리", DashBoardMenu.RECRUIT_MANAGE_URL, DashBoardMenuGroup.CONTENT_GROUP);
+            adminDashBoardService.refreshCache();
         }
 
         private void initAdminDashBoard(String name, String url, DashBoardMenuGroup menuGroup){
-            if(dashBoardMenuRepository.existsByName(name)){
-                log.info("DashBoardMenu {} already exists", name);
-            }else{
-                Role adminRole = roleRepository.findByName(Role.ROLE_ADMIN).get();
+            initAdminDashBoard(name, url, menuGroup, null, null);
+        }
 
+        private void initAdminDashBoard(String name, String url, DashBoardMenuGroup menuGroup, String legacyName, String legacyUrl){
+            Optional<DashBoardMenu> existingMenu = dashBoardMenuRepository.findByName(name);
+
+            if(existingMenu.isEmpty() && legacyName != null) {
+                existingMenu = dashBoardMenuRepository.findByName(legacyName);
+            }
+
+            if(existingMenu.isEmpty()) {
+                existingMenu = dashBoardMenuRepository.findOneByUrl(url);
+            }
+
+            if(existingMenu.isEmpty() && legacyUrl != null) {
+                existingMenu = dashBoardMenuRepository.findOneByUrl(legacyUrl);
+            }
+
+            Role adminRole = roleRepository.findByName(Role.ROLE_ADMIN).get();
+
+            if(existingMenu.isPresent()){
+                DashBoardMenu dashboardMenu = existingMenu.get();
+
+                if(!name.equals(dashboardMenu.getName()) || !url.equals(dashboardMenu.getUrl()) || !menuGroup.equals(dashboardMenu.getMenuGroup())){
+                    dashboardMenu.updateMenu(name, url, menuGroup);
+                    dashBoardMenuRepository.save(dashboardMenu);
+                    log.info("DashboardMenu {} is updated", name);
+                }else{
+                    log.info("DashBoardMenu {} already exists", name);
+                }
+
+                ensureAdminDashboardAuthorization(dashboardMenu, adminRole);
+            }else{
                 DashBoardMenu dashboardMenu = dashBoardMenuRepository.save(
                         DashBoardMenu.builder()
                                 .name(name)
@@ -236,6 +276,29 @@ public class InitRequiredData {
             }
 
 
+        }
+
+        private void ensureAdminDashboardAuthorization(DashBoardMenu dashboardMenu, Role adminRole) {
+            boolean hasAdminAuthorization = dashboardMenu.getDashBoardMenuAuthorizations()
+                    .stream()
+                    .anyMatch(authorization -> authorization.authorize(List.of(adminRole)));
+
+            if(hasAdminAuthorization) {
+                return;
+            }
+
+            DashBoardMenuAuthorization dashBoardMenuAuthorization = new DashBoardMenuAuthorization(dashboardMenu, adminRole);
+            dashBoardMenuAuthorizationRepository.save(dashBoardMenuAuthorization);
+
+            List<DashBoardMenuAuthorization> authorizations = new ArrayList<>(dashboardMenu.getDashBoardMenuAuthorizations());
+            authorizations.add(dashBoardMenuAuthorization);
+
+            SelectOption selectOption = dashboardMenu.getSelectOption() == null
+                    ? SelectOption.ONLY_ADMIN
+                    : dashboardMenu.getSelectOption();
+
+            dashboardMenu.update(selectOption, authorizations);
+            dashBoardMenuRepository.save(dashboardMenu);
         }
 
         private void initSystemAccount(){

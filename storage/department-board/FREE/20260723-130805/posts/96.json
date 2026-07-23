@@ -1,0 +1,15 @@
+{
+  "articleNo" : 96,
+  "postId" : 96,
+  "title" : "[Dummy Freeboard] Local test post 1",
+  "writer" : "Test User",
+  "createdAt" : "2026-07-10T09:20:39.81817",
+  "modifiedAt" : "2026-07-10T09:20:39.81817",
+  "views" : 11,
+  "categoryId" : 4,
+  "categoryName" : "일반",
+  "boardName" : "자유게시판",
+  "contentsHtml" : "<p>This is dummy freeboard post 1.</p><ul><li>Board list check</li><li>Post detail check</li></ul>",
+  "contentsText" : "This is dummy freeboard post 1. Board list check Post detail check",
+  "attachments" : [ ]
+}

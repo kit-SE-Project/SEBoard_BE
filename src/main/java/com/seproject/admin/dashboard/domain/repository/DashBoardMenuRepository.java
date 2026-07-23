@@ -15,6 +15,10 @@ public interface DashBoardMenuRepository extends JpaRepository<DashBoardMenu, Lo
 
     boolean existsByName(String name);
 
+    Optional<DashBoardMenu> findByName(String name);
+
+    Optional<DashBoardMenu> findOneByUrl(String url);
+
     @Query("select m from DashBoardMenu m join fetch m.dashBoardMenuAuthorizations auth join fetch auth.role role where m.url=:url")
     Optional<DashBoardMenu> findByUrl(String url);
 }

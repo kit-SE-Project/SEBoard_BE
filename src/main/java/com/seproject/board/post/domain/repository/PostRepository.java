@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,5 +40,21 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Modifying
     @Query("update Post p set p.category = :to where p.category = :from")
     void changeCategory(@Param("from") Category from, @Param("to") Category to);
+
+    @Query("select distinct p from Post p " +
+            "join fetch p.category c " +
+            "join fetch c.superMenu sm " +
+            "join fetch p.author author " +
+            "left join fetch author.account account " +
+            "where (c.urlInfo = :boardUrlInfo or sm.urlInfo = :boardUrlInfo) " +
+            "and p.status = 'NORMAL' " +
+            "and p.baseTime.createdAt >= :fromDateTime " +
+            "and p.baseTime.createdAt < :toDateTime " +
+            "order by p.baseTime.createdAt desc")
+    List<Post> findNormalPostsForDepartmentBoardExport(
+            @Param("boardUrlInfo") String boardUrlInfo,
+            @Param("fromDateTime") LocalDateTime fromDateTime,
+            @Param("toDateTime") LocalDateTime toDateTime
+    );
 
 }
