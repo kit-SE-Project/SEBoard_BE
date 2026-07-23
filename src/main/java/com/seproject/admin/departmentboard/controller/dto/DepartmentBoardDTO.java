@@ -40,15 +40,25 @@ public class DepartmentBoardDTO {
     public static class DepartmentBoardResult {
         private String jobId;
         private String status;
-        private String downloadRoot;
         private String downloadFileName;
-        private String downloadFileUrl;
         private int totalCount;
         private int successCount;
         private int failCount;
 
         @Builder.Default
+        private List<DepartmentBoardSuccess> successes = new ArrayList<>();
+
+        @Builder.Default
         private List<DepartmentBoardFailure> failures = new ArrayList<>();
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DepartmentBoardSuccess {
+        private Long articleNo;
+        private String title;
     }
 
     @Data

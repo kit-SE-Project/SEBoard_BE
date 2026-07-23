@@ -9,13 +9,13 @@ import com.seproject.admin.departmentboard.controller.dto.DepartmentBoardDTO.Dep
 import com.seproject.admin.departmentboard.controller.dto.DepartmentBoardDTO.DepartmentBoardRequest;
 import com.seproject.admin.departmentboard.controller.dto.DepartmentBoardDTO.DepartmentBoardResult;
 import com.seproject.admin.departmentboard.controller.dto.DepartmentBoardDTO.DepartmentBoardSource;
+import com.seproject.admin.departmentboard.controller.dto.DepartmentBoardDTO.DepartmentBoardSuccess;
 import com.seproject.board.post.domain.model.Post;
 import com.seproject.board.post.domain.repository.PostRepository;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomAccessDeniedException;
 import com.seproject.error.exception.CustomAuthenticationException;
 import com.seproject.error.exception.CustomIllegalArgumentException;
-import com.seproject.error.exception.NoSuchResourceException;
 import com.seproject.file.domain.model.AttachableType;
 import com.seproject.file.domain.model.FileMetaData;
 import com.seproject.file.domain.repository.FileMetaDataRepository;
@@ -26,12 +26,13 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -68,89 +69,59 @@ public class DepartmentBoardApiDownloadService {
                 .totalCount(posts.size())
                 .successCount(posts.size())
                 .failCount(0)
+                .successes(toSuccesses(posts))
                 .failures(List.of())
                 .build();
     }
 
-    public DepartmentBoardResult download(DepartmentBoardRequest request) {
+    public DepartmentBoardArchive download(DepartmentBoardRequest request) {
         checkAuthorization();
         SearchCondition condition = validate(request);
 
         String jobId = createJobId();
-        Path downloadRoot = Paths.get("storage", "department-board", condition.getSource().name(), jobId);
         String downloadFileName = createDownloadFileName(condition.getSource(), jobId);
         LocalDateTime startedAt = LocalDateTime.now();
         List<DepartmentBoardFailure> failures = new ArrayList<>();
+        List<ArticleZipEntry> articles = new ArrayList<>();
+        List<DepartmentBoardSuccess> successes = new ArrayList<>();
 
-        try {
-            Files.createDirectories(downloadRoot.resolve("posts"));
-            Files.createDirectories(downloadRoot.resolve("attachments"));
+        List<Post> posts = findPosts(condition);
+        Map<Long, List<FileMetaData>> attachments = condition.isIncludeAttachments() ? findAttachments(posts) : Map.of();
 
-            List<Post> posts = findPosts(condition);
-            Map<Long, List<FileMetaData>> attachments = findAttachments(posts);
-            int successCount = 0;
+        for (Post post : posts) {
+            try {
+                List<ArticleAttachment> articleAttachments = condition.isIncludeAttachments()
+                        ? toArticleAttachments(post.getPostId(), attachments.get(post.getPostId()), failures)
+                        : List.of();
+                ArticleDetail detail = toArticleDetail(post, articleAttachments);
 
-            for (Post post : posts) {
-                try {
-                    List<ArticleAttachment> articleAttachments = toArticleAttachments(attachments.get(post.getPostId()));
-
-                    if (condition.isIncludeAttachments()) {
-                        copyAttachments(downloadRoot, post.getPostId(), articleAttachments, failures);
-                    }
-
-                    ArticleDetail detail = toArticleDetail(post, articleAttachments);
-                    objectMapper.writerWithDefaultPrettyPrinter()
-                            .writeValue(downloadRoot.resolve("posts").resolve(post.getPostId() + ".json").toFile(), detail);
-                    successCount++;
-                } catch (Exception e) {
-                    failures.add(failure(post.getPostId(), "게시글 export 실패", e.getMessage()));
-                }
+                articles.add(ArticleZipEntry.builder()
+                        .entryName("posts/" + post.getPostId() + ".json")
+                        .detail(detail)
+                        .build());
+                successes.add(toSuccess(post));
+            } catch (Exception e) {
+                failures.add(failure(post.getPostId(), "게시글 export 실패", e.getMessage()));
             }
-
-            DepartmentBoardResult result = DepartmentBoardResult.builder()
-                    .jobId(jobId)
-                    .status(failures.isEmpty() ? "COMPLETED" : "COMPLETED_WITH_FAILURES")
-                    .downloadRoot(downloadRoot.toString())
-                    .downloadFileName(downloadFileName)
-                    .downloadFileUrl(createDownloadFileUrl(condition.getSource(), jobId))
-                    .totalCount(posts.size())
-                    .successCount(successCount)
-                    .failCount(failures.size())
-                    .failures(failures)
-                    .build();
-
-            writeMetadata(downloadRoot, condition, startedAt, LocalDateTime.now(), result);
-            createZip(downloadRoot, getZipPath(condition.getSource(), jobId));
-            return result;
-        } catch (Exception e) {
-            DepartmentBoardResult result = failedResult(
-                    jobId,
-                    downloadRoot.toString(),
-                    null,
-                    "다운로드 작업 실패",
-                    e.getMessage()
-            );
-
-            tryWriteFailureMetadata(downloadRoot, condition, startedAt, result);
-            return result;
-        }
-    }
-
-    public Path findDownloadFile(DepartmentBoardSource source, String jobId) {
-        checkAuthorization();
-
-        if (jobId == null || !jobId.matches("\\d{8}-\\d{6}")) {
-            throw new NoSuchResourceException(ErrorCode.NOT_EXIST_FILE);
         }
 
-        Path zipPath = getZipPath(source, jobId).normalize();
-        Path sourceRoot = Paths.get("storage", "department-board", source.name()).normalize();
+        DepartmentBoardResult result = DepartmentBoardResult.builder()
+                .jobId(jobId)
+                .status(failures.isEmpty() ? "COMPLETED" : "COMPLETED_WITH_FAILURES")
+                .downloadFileName(downloadFileName)
+                .totalCount(posts.size())
+                .successCount(successes.size())
+                .failCount(failures.size())
+                .successes(successes)
+                .failures(failures)
+                .build();
+        Map<String, Object> metadata = toMetadata(condition, startedAt, LocalDateTime.now(), result);
+        StreamingResponseBody body = outputStream -> writeZip(outputStream, metadata, articles);
 
-        if (!zipPath.startsWith(sourceRoot) || !Files.exists(zipPath)) {
-            throw new NoSuchResourceException(ErrorCode.NOT_EXIST_FILE);
-        }
-
-        return zipPath;
+        return DepartmentBoardArchive.builder()
+                .fileName(downloadFileName)
+                .body(body)
+                .build();
     }
 
     private void checkAuthorization() {
@@ -236,73 +207,83 @@ public class DepartmentBoardApiDownloadService {
                 .build();
     }
 
-    private List<ArticleAttachment> toArticleAttachments(List<FileMetaData> fileMetaDataList) {
+    private List<ArticleAttachment> toArticleAttachments(
+            Long postId,
+            List<FileMetaData> fileMetaDataList,
+            List<DepartmentBoardFailure> failures
+    ) {
         if (fileMetaDataList == null) {
             return new ArrayList<>();
         }
 
-        return fileMetaDataList.stream()
-                .map(file -> ArticleAttachment.builder()
-                        .attachNo(file.getFileMetaDataId())
-                        .fileName(file.getOriginalFileName())
-                        .storedFileName(file.getStoredFileName())
-                        .filePath(file.getFilePath())
-                        .urlPath(file.getUrlPath())
-                        .fileSize(file.getFileSize())
-                        .build())
-                .collect(Collectors.toList());
-    }
+        List<ArticleAttachment> attachments = new ArrayList<>();
 
-    private void copyAttachments(
-            Path downloadRoot,
-            Long postId,
-            List<ArticleAttachment> attachments,
-            List<DepartmentBoardFailure> failures
-    ) throws IOException {
-        if (attachments.isEmpty()) {
-            return;
+        for (FileMetaData file : fileMetaDataList) {
+            if (file.getFilePath() == null || file.getFilePath().isBlank()) {
+                failures.add(failure(postId, "첨부파일 경로 없음", file.getOriginalFileName()));
+                continue;
+            }
+
+            Path source = Paths.get(file.getFilePath()).normalize();
+
+            if (!Files.exists(source)) {
+                failures.add(failure(postId, "첨부파일 원본 없음", source.toString()));
+                continue;
+            }
+
+            ArticleAttachment attachment = ArticleAttachment.builder()
+                    .attachNo(file.getFileMetaDataId())
+                    .fileName(file.getOriginalFileName())
+                    .storedFileName(file.getStoredFileName())
+                    .filePath(source.toString())
+                    .urlPath(file.getUrlPath())
+                    .fileSize(file.getFileSize())
+                    .savedPath(buildAttachmentEntryName(postId, file))
+                    .build();
+            attachments.add(attachment);
         }
 
-        Path attachmentDir = downloadRoot.resolve("attachments").resolve(String.valueOf(postId));
-        Files.createDirectories(attachmentDir);
+        return attachments;
+    }
 
-        for (ArticleAttachment attachment : attachments) {
-            try {
-                if (attachment.getFilePath() == null || attachment.getFilePath().isBlank()) {
-                    failures.add(failure(postId, "첨부파일 경로 없음", attachment.getFileName()));
-                    continue;
+    private void writeZip(
+            OutputStream outputStream,
+            Map<String, Object> metadata,
+            List<ArticleZipEntry> articles
+    ) throws IOException {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+            writeJsonEntry(zipOutputStream, "metadata.json", metadata);
+
+            for (ArticleZipEntry article : articles) {
+                writeJsonEntry(zipOutputStream, article.getEntryName(), article.getDetail());
+            }
+
+            for (ArticleZipEntry article : articles) {
+                for (ArticleAttachment attachment : article.getDetail().getAttachments()) {
+                    writeAttachmentEntry(zipOutputStream, attachment);
                 }
-
-                Path source = Paths.get(attachment.getFilePath());
-
-                if (!Files.exists(source)) {
-                    failures.add(failure(postId, "첨부파일 원본 없음", source.toString()));
-                    continue;
-                }
-
-                String attachNo = attachment.getAttachNo() == null ? "unknown" : String.valueOf(attachment.getAttachNo());
-                Path target = attachmentDir.resolve(attachNo + "_" + sanitizeFileName(attachment.getFileName())).normalize();
-
-                if (!target.startsWith(attachmentDir)) {
-                    failures.add(failure(postId, "첨부파일 저장 경로 오류", attachment.getFileName()));
-                    continue;
-                }
-
-                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-                attachment.setSavedPath(target.toString());
-            } catch (Exception e) {
-                failures.add(failure(postId, "첨부파일 복사 실패", e.getMessage()));
             }
         }
     }
 
-    private void writeMetadata(
-            Path downloadRoot,
+    private void writeJsonEntry(ZipOutputStream zipOutputStream, String entryName, Object value) throws IOException {
+        zipOutputStream.putNextEntry(new ZipEntry(entryName));
+        zipOutputStream.write(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(value));
+        zipOutputStream.closeEntry();
+    }
+
+    private void writeAttachmentEntry(ZipOutputStream zipOutputStream, ArticleAttachment attachment) throws IOException {
+        zipOutputStream.putNextEntry(new ZipEntry(attachment.getSavedPath()));
+        Files.copy(Paths.get(attachment.getFilePath()), zipOutputStream);
+        zipOutputStream.closeEntry();
+    }
+
+    private Map<String, Object> toMetadata(
             SearchCondition condition,
             LocalDateTime startedAt,
             LocalDateTime finishedAt,
             DepartmentBoardResult result
-    ) throws IOException {
+    ) {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("source", condition.getSource());
         metadata.put("boardUrlInfo", condition.getSource().getBoardUrlInfo());
@@ -312,50 +293,19 @@ public class DepartmentBoardApiDownloadService {
         metadata.put("startedAt", startedAt);
         metadata.put("finishedAt", finishedAt);
         metadata.put("result", result);
-
-        objectMapper.writerWithDefaultPrettyPrinter()
-                .writeValue(downloadRoot.resolve("metadata.json").toFile(), metadata);
+        return metadata;
     }
 
-    private void createZip(Path downloadRoot, Path zipPath) throws IOException {
-        Files.createDirectories(zipPath.getParent());
-
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(zipPath))) {
-            try (var paths = Files.walk(downloadRoot)) {
-                for (Path path : paths.filter(Files::isRegularFile).collect(Collectors.toList())) {
-                    String entryName = downloadRoot.relativize(path).toString().replace('\\', '/');
-                    zipOutputStream.putNextEntry(new ZipEntry(entryName));
-                    Files.copy(path, zipOutputStream);
-                    zipOutputStream.closeEntry();
-                }
-            }
-        }
+    private List<DepartmentBoardSuccess> toSuccesses(List<Post> posts) {
+        return posts.stream()
+                .map(this::toSuccess)
+                .collect(Collectors.toList());
     }
 
-    private void tryWriteFailureMetadata(
-            Path downloadRoot,
-            SearchCondition condition,
-            LocalDateTime startedAt,
-            DepartmentBoardResult result
-    ) {
-        try {
-            Files.createDirectories(downloadRoot);
-            writeMetadata(downloadRoot, condition, startedAt, LocalDateTime.now(), result);
-        } catch (IOException ignored) {
-        }
-    }
-
-    private DepartmentBoardResult failedResult(String jobId, String downloadRoot, Long articleNo, String reason, String message) {
-        List<DepartmentBoardFailure> failures = List.of(failure(articleNo, reason, message));
-
-        return DepartmentBoardResult.builder()
-                .jobId(jobId)
-                .status("FAILED")
-                .downloadRoot(downloadRoot)
-                .totalCount(0)
-                .successCount(0)
-                .failCount(failures.size())
-                .failures(failures)
+    private DepartmentBoardSuccess toSuccess(Post post) {
+        return DepartmentBoardSuccess.builder()
+                .articleNo(post.getPostId())
+                .title(post.getTitle())
                 .build();
     }
 
@@ -391,12 +341,9 @@ public class DepartmentBoardApiDownloadService {
         return "department-board-" + source.name().toLowerCase() + "-" + jobId + ".zip";
     }
 
-    private String createDownloadFileUrl(DepartmentBoardSource source, String jobId) {
-        return "/admin/department-board-api-download/files/" + source.name() + "/" + jobId;
-    }
-
-    private Path getZipPath(DepartmentBoardSource source, String jobId) {
-        return Paths.get("storage", "department-board", source.name(), createDownloadFileName(source, jobId));
+    private String buildAttachmentEntryName(Long postId, FileMetaData file) {
+        String attachNo = file.getFileMetaDataId() == null ? "unknown" : String.valueOf(file.getFileMetaDataId());
+        return "attachments/" + postId + "/" + attachNo + "_" + sanitizeFileName(file.getOriginalFileName());
     }
 
     @Data
@@ -406,6 +353,20 @@ public class DepartmentBoardApiDownloadService {
         private LocalDate fromDate;
         private LocalDate toDate;
         private boolean includeAttachments;
+    }
+
+    @Data
+    @Builder
+    public static class DepartmentBoardArchive {
+        private String fileName;
+        private StreamingResponseBody body;
+    }
+
+    @Data
+    @Builder
+    private static class ArticleZipEntry {
+        private String entryName;
+        private ArticleDetail detail;
     }
 
     @Data
