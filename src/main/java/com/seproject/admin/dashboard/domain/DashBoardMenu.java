@@ -26,6 +26,7 @@ public class DashBoardMenu {
 
     public static final String POST_MANAGE_URL = "/admin/posts";
     public static final String COMMENT_MANAGE_URL = "/admin/comments";
+    public static final String DEPARTMENT_BOARD_API_DOWNLOAD_URL = "/admin/department-board-api-download";
     public static final String FILE_MANAGE_URL = "/admin/files";
     public static final String TRASH_URL = "/admin/trash";
 
@@ -65,6 +66,12 @@ public class DashBoardMenu {
         this.selectOption = selectOption;
         this.dashBoardMenuAuthorizations.clear();
         this.dashBoardMenuAuthorizations.addAll(dashBoardMenuAuthorizations);
+    }
+
+    public void updateMenu(String name, String url, DashBoardMenuGroup menuGroup) {
+        this.name = name;
+        this.url = url;
+        this.menuGroup = menuGroup;
     }
 
 

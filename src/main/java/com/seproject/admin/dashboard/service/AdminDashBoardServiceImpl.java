@@ -67,6 +67,10 @@ public class AdminDashBoardServiceImpl {
         return ids;
     }
 
+    public void refreshCache() {
+        all = dashBoardMenuRepository.findAll();
+    }
+
     @Transactional
     public void update(SelectOption selectOption, DashBoardMenu dashBoardMenu, List<Role> roles) {
 
@@ -76,7 +80,7 @@ public class AdminDashBoardServiceImpl {
 
         dashBoardMenu.update(selectOption, collect);
 
-        all = dashBoardMenuRepository.findAll();
+        refreshCache();
     }
 
 }
