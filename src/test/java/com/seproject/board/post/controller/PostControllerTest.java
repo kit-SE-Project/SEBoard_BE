@@ -1,37 +1,9 @@
 package com.seproject.board.post.controller;
 
-import com.jayway.jsonpath.JsonPath;
-import com.seproject.account.account.domain.Account;
-import com.seproject.account.account.domain.FormAccount;
-import com.seproject.admin.menu.domain.SelectOption;
-import com.seproject.admin.menu.controller.dto.MenuDTO;
-import com.seproject.admin.menu.utils.MenuRequestBuilder;
-import com.seproject.board.common.Status;
-import com.seproject.board.menu.domain.BoardMenu;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.menu.domain.Menu;
-import com.seproject.board.post.controller.dto.ExposeOptionRequest;
-import com.seproject.board.post.controller.dto.PostRequest;
-import com.seproject.board.post.domain.model.Post;
-import com.seproject.board.post.domain.model.exposeOptions.ExposeOption;
-import com.seproject.board.post.domain.model.exposeOptions.ExposeState;
 import com.seproject.global.IntegrationTestSupport;
-import com.seproject.member.domain.BoardUser;
-import com.seproject.member.domain.Member;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class PostControllerTest extends IntegrationTestSupport {
 //

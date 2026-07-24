@@ -1,30 +1,10 @@
 package com.seproject.board.comment.controller;
 
-import com.jayway.jsonpath.JsonPath;
-import com.seproject.account.account.domain.FormAccount;
-import com.seproject.board.comment.domain.model.Comment;
-import com.seproject.board.comment.domain.model.Reply;
-import com.seproject.board.common.Status;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.post.domain.model.Post;
 import com.seproject.global.IntegrationTestSupport;
-import com.seproject.member.domain.Anonymous;
-import com.seproject.member.domain.BoardUser;
-import com.seproject.member.domain.Member;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-import java.util.UUID;
-
-import static com.seproject.board.comment.controller.dto.ReplyRequest.CreateReplyRequest;
-import static com.seproject.board.comment.controller.dto.ReplyRequest.UpdateReplyRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ReplyControllerTest extends IntegrationTestSupport {
 //    static final String url = "/reply/";

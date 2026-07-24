@@ -1,15 +1,10 @@
 package com.seproject.admin.menu.service;
 
-import com.seproject.account.authorization.domain.MenuAccessAuthorization;
-import com.seproject.account.authorization.domain.MenuEditAuthorization;
-import com.seproject.account.authorization.domain.MenuExposeAuthorization;
-import com.seproject.account.authorization.domain.MenuManageAuthorization;
-import com.seproject.account.role.domain.Role;
 import com.seproject.account.role.domain.repository.RoleRepository;
-import com.seproject.board.menu.domain.BoardMenu;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.menu.domain.ExternalSiteMenu;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.BoardMenu;
+import com.seproject.board.menu.domain.model.Category;
+import com.seproject.board.menu.domain.model.ExternalSiteMenu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.menu.domain.repository.BoardMenuRepository;
 import com.seproject.board.menu.domain.repository.CategoryRepository;
 import com.seproject.board.menu.domain.repository.ExternalSiteMenuRepository;
@@ -132,6 +127,10 @@ public class AdminMenuService {
     public void delete(Long menuId) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new CustomIllegalArgumentException(ErrorCode.NOT_EXIST_MENU,null));
+
+        if(menu.getType().equals("RECRUIT")){
+            throw new CustomIllegalArgumentException(ErrorCode.CANNOT_DELETE_MENU,null);
+        }
 
         if(menu.getType().equals("MENU") || menu.getType().equals("BOARD")){
             if(menuRepository.existsSubMenuById(menuId)){

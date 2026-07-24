@@ -1,6 +1,6 @@
 package com.seproject.board.menu.service;
 
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.menu.domain.repository.MenuRepository;
 import com.seproject.board.post.domain.repository.PostRepository;
 import com.seproject.error.errorCode.ErrorCode;

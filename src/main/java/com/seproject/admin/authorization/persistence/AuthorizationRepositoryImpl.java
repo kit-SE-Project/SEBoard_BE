@@ -3,7 +3,6 @@ package com.seproject.admin.authorization.persistence;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.seproject.account.authorization.domain.*;
 import com.seproject.account.authorization.domain.repository.AuthorizationRepositoryCustom;
-import com.seproject.board.menu.domain.QMenu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +13,7 @@ import static com.seproject.account.authorization.domain.QMenuAccessAuthorizatio
 import static com.seproject.account.authorization.domain.QMenuEditAuthorization.menuEditAuthorization;
 import static com.seproject.account.authorization.domain.QMenuExposeAuthorization.menuExposeAuthorization;
 import static com.seproject.account.authorization.domain.QMenuManageAuthorization.menuManageAuthorization;
-import static com.seproject.board.menu.domain.QMenu.*;
+import static com.seproject.board.menu.domain.model.QMenu.menu;
 
 @RequiredArgsConstructor
 @Repository

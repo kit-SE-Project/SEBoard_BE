@@ -7,6 +7,8 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
 
 public class CommentRequest {
 
@@ -22,6 +24,7 @@ public class CommentRequest {
         @NotNull
         @JsonProperty("isReadOnlyAuthor")
         private boolean isReadOnlyAuthor;
+        private List<Long> attachmentIds = Collections.emptyList();
 
         public CommentWriteCommand toCommand() {
             return CommentWriteCommand.builder()
@@ -29,6 +32,7 @@ public class CommentRequest {
                     .contents(contents)
                     .isAnonymous(isAnonymous)
                     .isOnlyReadByAuthor(isReadOnlyAuthor)
+                    .attachmentIds(attachmentIds == null ? Collections.emptyList() : attachmentIds)
                     .build();
         }
     }
@@ -40,11 +44,14 @@ public class CommentRequest {
         @NotNull
         @JsonProperty("isReadOnlyAuthor")
         private boolean isReadOnlyAuthor;
+        private List<Long> attachmentIds = Collections.emptyList();
+
         public CommentEditCommand toCommand(Long commentId) {
             return CommentEditCommand.builder()
                     .commentId(commentId)
                     .contents(contents)
                     .isOnlyReadByAuthor(isReadOnlyAuthor)
+                    .attachmentIds(attachmentIds == null ? Collections.emptyList() : attachmentIds)
                     .build();
         }
     }

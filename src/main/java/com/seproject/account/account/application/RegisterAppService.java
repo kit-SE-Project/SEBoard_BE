@@ -68,7 +68,7 @@ public class RegisterAppService {
         Long memberId = memberService.createMember(account,nickname);
 
         UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(account.getSub(), UUID.randomUUID().toString(),account.getAuthorities());
+                new UsernamePasswordAuthenticationToken(account, UUID.randomUUID().toString(),account.getAuthorities());
         JWT accessToken = tokenService.createAccessToken(token);
         JWT refreshToken = tokenService.createLargeRefreshToken(token);
 

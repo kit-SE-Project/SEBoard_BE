@@ -14,9 +14,8 @@ import java.util.Optional;
 public interface IpRepository extends JpaRepository<Ip,Long> {
     Optional<Ip> findByIpAddress(String ipAddress);
     boolean existsByIpAddress(String ipAddress);
-
+    boolean existsByIpAddressAndIpType(String ipAddress, IpType ipType);
 
     @Query("select ip from Ip ip where ip.ipType = :ipType")
-    List<Ip> findAllByIpType(@Param("ipType")IpType ipType);
-
+    List<Ip> findAllByIpType(@Param("ipType") IpType ipType);
 }

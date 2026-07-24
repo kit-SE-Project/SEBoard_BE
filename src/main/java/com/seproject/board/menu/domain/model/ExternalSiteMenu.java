@@ -1,4 +1,4 @@
-package com.seproject.board.menu.domain;
+package com.seproject.board.menu.domain.model;
 
 import lombok.NoArgsConstructor;
 

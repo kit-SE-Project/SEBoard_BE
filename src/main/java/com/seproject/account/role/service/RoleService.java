@@ -69,6 +69,15 @@ public class RoleService {
     }
 
     @Transactional
+    public Long createRole(String roleName, String description, String alias,
+                           String badgeType, Integer badgePriority) {
+        Long id = createRole(roleName, description, alias);
+        Role role = roleRepository.findById(id).orElseThrow();
+        role.updateBadge(badgeType, badgePriority);
+        return id;
+    }
+
+    @Transactional
     public void deleteRole(Long roleId) {
 
         Role role = roleRepository.findById(roleId).orElseThrow(
@@ -82,20 +91,26 @@ public class RoleService {
     }
 
     @Transactional
-    public Long updateRole(Long roleId,String name, String description, String alias) {
+    public Long updateRole(Long roleId, String name, String description, String alias) {
+        return updateRole(roleId, name, description, alias, null, null);
+    }
 
+    @Transactional
+    public Long updateRole(Long roleId, String name, String description, String alias,
+                           String badgeType, Integer badgePriority) {
         Role role = roleRepository.findById(roleId).orElseThrow(() ->
-            new CustomIllegalArgumentException(ErrorCode.ROLE_NOT_FOUND,null));
+                new CustomIllegalArgumentException(ErrorCode.ROLE_NOT_FOUND, null));
 
         if (!name.startsWith("ROLE_")) {
             name = "ROLE_" + name;
         }
 
-        if(role.isImmutable()) {
-            throw new CustomIllegalArgumentException(ErrorCode.IMMUTABLE_ROLE,null);
+        if (role.isImmutable()) {
+            throw new CustomIllegalArgumentException(ErrorCode.IMMUTABLE_ROLE, null);
         }
 
-        role.update(name,description,alias);
+        role.update(name, description, alias);
+        role.updateBadge(badgeType, badgePriority);
         return role.getId();
     }
 

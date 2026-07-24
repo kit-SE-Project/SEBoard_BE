@@ -2,7 +2,6 @@ package com.seproject.file.domain.model;
 
 
 import com.seproject.board.common.BaseTime;
-import com.seproject.board.post.domain.model.Post;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,9 +21,14 @@ public class FileMetaData {
     private String urlPath;
     private Long fileSize;
     private BaseTime baseTime;
-    @ManyToOne
-    @JoinColumn(name = "post_id")
-    private Post post;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "attachable_type")
+    private AttachableType attachableType;
+
+    @Column(name = "attachable_id")
+    private Long attachableId;
+
     public FileMetaData(String originalFileName, String storedFileName, String filePath, String urlPath, Long fileSize, BaseTime baseTime) {
         this.originalFileName = originalFileName;
         this.storedFileName = storedFileName;
@@ -32,6 +36,11 @@ public class FileMetaData {
         this.urlPath = urlPath;
         this.fileSize = fileSize;
         this.baseTime = baseTime;
+    }
+
+    public void attachTo(AttachableType type, Long id) {
+        this.attachableType = type;
+        this.attachableId = id;
     }
 
 }

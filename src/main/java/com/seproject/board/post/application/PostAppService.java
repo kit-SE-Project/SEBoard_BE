@@ -10,7 +10,7 @@ import com.seproject.admin.post.application.PostSyncService;
 import com.seproject.board.comment.domain.model.Comment;
 import com.seproject.board.comment.domain.repository.CommentRepository;
 import com.seproject.board.common.BaseTime;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.service.CategoryService;
 import com.seproject.board.post.application.dto.PostCommand.PostEditCommand;
 import com.seproject.board.post.application.dto.PostCommand.PostWriteCommand;
@@ -20,6 +20,7 @@ import com.seproject.board.post.domain.model.exposeOptions.ExposeState;
 import com.seproject.board.post.service.PostService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.*;
+import com.seproject.file.domain.model.AttachableType;
 import com.seproject.file.domain.model.FileConfiguration;
 import com.seproject.file.domain.model.FileMetaData;
 import com.seproject.file.domain.repository.FileConfigurationRepository;
@@ -29,16 +30,20 @@ import com.seproject.member.domain.Anonymous;
 import com.seproject.member.domain.BoardUser;
 import com.seproject.member.service.AnonymousService;
 import com.seproject.member.service.MemberService;
+import com.seproject.notification.NotificationEventDto;
+import com.seproject.notification.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -57,6 +62,7 @@ public class PostAppService {
     private final CommentRepository commentRepository;
 
     private final PostSyncService postSyncAppService;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     @Transactional
     public Long writePost(PostWriteCommand command){
@@ -92,7 +98,6 @@ public class PostAppService {
         String contents = command.getContents();
         BaseTime now = BaseTime.now();
 
-        HashSet<FileMetaData> attachments = new HashSet<>(fileMetaDataList);
         ExposeOption exposeOption = ExposeOption.of(command.getExposeState(), command.getPrivatePassword());
 
         if (command.getExposeState() == ExposeState.KUMOH) {
@@ -109,13 +114,36 @@ public class PostAppService {
             throw new CustomAccessDeniedException(ErrorCode.ACCESS_DENIED, null);
         }
 
-        Long postId = postService.createPost(title, contents, category, author, now, isPined, attachments, exposeOption);
+        Long postId = postService.createPost(title, contents, category, author, now, isPined, exposeOption);
+
+        fileMetaDataList.forEach(f -> f.attachTo(AttachableType.POST, postId));
 
         if(command.isSyncOldVersion()){
             postSyncAppService.exportNewPost(category.getSuperMenu().getUrlInfo(), postId, title, contents, author.getName());
         }
 
+        publishNewPostNotification(postId, title, category, author.getAccount().getAccountId());
+
         return postId;
+    }
+
+    private void publishNewPostNotification(Long postId, String title, Category category, Long authorAccountId) {
+        try {
+            Long boardMenuId = category.getSuperMenu() != null
+                ? category.getSuperMenu().getMenuId()
+                : category.getMenuId();
+
+            notificationEventPublisher.publish(NotificationEventDto.builder()
+                .type("NEW_POST")
+                .relatedId(postId)
+                .title(title)
+                .content("구독한 게시판에 새 글이 올라왔습니다.")
+                .boardMenuId(boardMenuId)
+                .authorId(authorAccountId)
+                .build());
+        } catch (Exception e) {
+            log.warn("새 게시글 알림 발행 실패", e);
+        }
     }
 
     private void checkSpamWord(String title, String contents) {
@@ -158,18 +186,27 @@ public class PostAppService {
         post.changeExposeOption(command.getExposeState(), command.getPrivatePassword());
 
         //TODO : 좀더 깔끔하게 처리?
-        List<FileMetaData> attachments =
+        List<FileMetaData> newAttachments =
                 fileMetaDataRepository.findAllById(command.getAttachmentIds()); //요청으로 들어온 attachment PK
 
-        Set<FileMetaData> removalAttachments = post.getAttachments();
-        removalAttachments.removeAll(attachments); //요청으로 들어온 PK와 기존의 PK를 비교하고, 새로온 PK에 없는 것은 삭제 대상
+        List<FileMetaData> existingAttachments =
+                fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.POST, post.getPostId());
 
-        //TODO : N+1 문제
-        removalAttachments.forEach(fileMetaData -> fileRepository.delete(fileMetaData.getFilePath())); //file 삭제
-        removalAttachments.forEach(fileMetaData -> post.removeAttachment(fileMetaData)); //db에서 정보 삭제
-        attachments.forEach(fileMetaData -> post.addAttachment(fileMetaData));
+        Set<Long> newIds = newAttachments.stream()
+                .map(FileMetaData::getFileMetaDataId)
+                .collect(Collectors.toSet());
 
-        validFileListSize(new ArrayList<>(post.getAttachments()));
+        //요청에 없는 기존 파일은 삭제
+        existingAttachments.stream()
+                .filter(f -> !newIds.contains(f.getFileMetaDataId()))
+                .forEach(f -> {
+                    fileRepository.delete(f.getFilePath());
+                    fileMetaDataRepository.delete(f);
+                });
+
+        newAttachments.forEach(f -> f.attachTo(AttachableType.POST, post.getPostId()));
+
+        validFileListSize(newAttachments);
 
 
         return post.getPostId();
@@ -204,7 +241,7 @@ public class PostAppService {
 
         throw new InvalidAuthorizationException(ErrorCode.ACCESS_DENIED);
 
-//        post.getAttachments().forEach(fileAppService::deleteFileFromStorage); //TODO : fileSystem에서 transactional 처리 필요
+//        fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.POST, post.getPostId()).forEach(f -> fileAppService.deleteFileFromStorage(f)); //TODO : fileSystem에서 transactional 처리 필요
 //        postRepository.deleteById(postId);
     }
 }

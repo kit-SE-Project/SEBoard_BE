@@ -1,6 +1,6 @@
 package com.seproject.board.bulletin.domain.model;
 
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

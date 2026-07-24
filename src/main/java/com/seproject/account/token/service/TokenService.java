@@ -74,7 +74,7 @@ public class TokenService {
 
            Collection<? extends GrantedAuthority> authorities = account.getAuthorities();
            UsernamePasswordAuthenticationToken newToken
-                   = new UsernamePasswordAuthenticationToken(subject,"",authorities);
+                   = new UsernamePasswordAuthenticationToken(account,"",authorities);
 
            JWT newAccessToken = jwtProvider.createAccessToken(newToken);
            JWT newRefreshToken = isLargeToken ?
@@ -131,7 +131,7 @@ public class TokenService {
 
         try {
             return header
-                    .get(JWTProperties.TYPE)
+                    .get("token_type")
                     .equals(JWTProperties.LARGE_REFRESH_TOKEN);
         } catch (JwtException e) {
             throw new CustomAuthenticationException(ErrorCode.INVALID_JWT, e);

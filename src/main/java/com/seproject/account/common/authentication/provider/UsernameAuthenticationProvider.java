@@ -44,7 +44,7 @@ public class UsernameAuthenticationProvider implements AuthenticationProvider {
         }
 
         if(passwordEncoder.matches(password,userDetails.getPassword())) {
-            return new UsernamePasswordAuthenticationToken(username,password, userDetails.getAuthorities());
+            return new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
         }
 
         loginHistoryRepository.save(new LoginHistory(username));

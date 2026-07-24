@@ -2,7 +2,7 @@ package com.seproject.admin.post.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.seproject.member.controller.dto.UserResponse;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.common.Status;
 import com.seproject.board.post.domain.model.Post;
 import lombok.Data;
@@ -48,7 +48,7 @@ public class PostResponse {
             this.views = post.getViews();
             this.createdAt = post.getBaseTime().getCreatedAt();
             this.modifiedAt = post.getBaseTime().getModifiedAt();
-            this.hasAttachment = post.hasAttachments();
+            this.hasAttachment = false; // attachments는 FileMetaData 테이블에서 별도 조회
             this.isReported = (post.getStatus()== Status.REPORTED);
             this.exposeOption = post.getExposeOption().getExposeState().toString();
         }
@@ -76,7 +76,7 @@ public class PostResponse {
             this.views = post.getViews();
             this.createdAt = post.getBaseTime().getCreatedAt();
             this.modifiedAt = post.getBaseTime().getModifiedAt();
-            this.hasAttachment = post.hasAttachments();
+            this.hasAttachment = false; // attachments는 FileMetaData 테이블에서 별도 조회
             this.exposeOption = post.getExposeOption().getExposeState().toString();
         }
     }

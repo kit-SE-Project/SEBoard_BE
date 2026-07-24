@@ -1,22 +1,10 @@
 package com.seproject.board.common.controller;
 
-import com.seproject.account.account.domain.FormAccount;
-import com.seproject.board.comment.domain.model.Comment;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.post.domain.model.Bookmark;
-import com.seproject.board.post.domain.model.Post;
 import com.seproject.global.IntegrationTestSupport;
-import com.seproject.member.domain.Member;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ProfileControllerTest extends IntegrationTestSupport {
 //

@@ -1,4 +1,4 @@
-package com.seproject.board.menu.domain;
+package com.seproject.board.menu.domain.model;
 
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;

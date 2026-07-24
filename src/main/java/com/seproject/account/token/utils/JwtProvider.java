@@ -1,5 +1,6 @@
 package com.seproject.account.token.utils;
 
+import com.seproject.account.account.domain.Account;
 import com.seproject.account.token.domain.JWT;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -46,19 +47,35 @@ public class JwtProvider {
 
     public JWT createToken(AbstractAuthenticationToken token, String type, String alg, Date IssuedAt, Date expiredAt) {
         String jwt = Jwts.builder()
-                .setHeaderParam(JWTProperties.TYPE, type)
+                .setHeaderParam("token_type", type)
                 .setHeaderParam(JWTProperties.ALGORITHM, alg)
-                .setSubject(token.getPrincipal().toString())
+                .setSubject(extractSubject(token))
                 .setIssuedAt(IssuedAt)
                 .setExpiration(expiredAt)
                 .claim(JWTProperties.AUTHORITIES,token.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
+                .claim("accountId", extractAccountId(token))
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
 
         return new JWT(jwt);
     }
 
+    private String extractSubject(AbstractAuthenticationToken token) {
+        Object principal = token.getPrincipal();
+        if (principal instanceof Account) {
+            return ((Account) principal).getLoginId();
+        }
+        return principal.toString();
+    }
+
+    private Long extractAccountId(AbstractAuthenticationToken token) {
+        Object principal = token.getPrincipal();
+        if (principal instanceof Account) {
+            return ((Account) principal).getAccountId();
+        }
+        return null;
+    }
 
 }

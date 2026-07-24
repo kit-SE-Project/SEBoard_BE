@@ -4,17 +4,21 @@ import com.seproject.account.account.domain.Account;
 import com.seproject.account.role.domain.Role;
 import com.seproject.account.utils.SecurityUtils;
 import com.seproject.board.comment.domain.model.Comment;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.post.controller.PostSearchOptions;
 import com.seproject.board.post.controller.dto.PostSearchRequest;
 import com.seproject.board.post.persistence.PostQueryRepository;
 import com.seproject.board.post.service.BookmarkService;
+import com.seproject.board.post.service.PostLikeService;
 import com.seproject.board.post.service.PostService;
 import com.seproject.error.errorCode.ErrorCode;
+import com.seproject.file.domain.model.AttachableType;
+import com.seproject.file.domain.model.FileMetaData;
+import com.seproject.file.domain.repository.FileMetaDataRepository;
 import com.seproject.error.exception.*;
 import com.seproject.board.post.controller.dto.PostResponse.RetrievePostDetailResponse;
 import com.seproject.board.post.controller.dto.PostResponse.RetrievePostListResponseElement;
-import com.seproject.board.menu.domain.BoardMenu;
+import com.seproject.board.menu.domain.model.BoardMenu;
 import com.seproject.board.post.domain.model.Post;
 import com.seproject.board.post.domain.model.exposeOptions.ExposeState;
 import com.seproject.member.domain.Member;
@@ -47,6 +51,8 @@ public class PostSearchAppService {
     private final MemberService memberService;
     private final PostService postService;
     private final BookmarkService bookmarkService;
+    private final PostLikeService postLikeService;
+    private final FileMetaDataRepository fileMetaDataRepository;
 
 
     @Transactional // TODO : 조회수 늘리기 다른 방법으로 변경
@@ -55,7 +61,15 @@ public class PostSearchAppService {
         Post post = postQueryRepository.findByIdWithAll(postId)
                 .orElseThrow(() -> new NoSuchResourceException(ErrorCode.NOT_EXIST_POST));
         Category category = post.getCategory();
-        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post);
+        List<FileMetaData> attachments = fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.POST, postId);
+        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post, attachments);
+
+        // 게시글 작성자 프로필 이미지 세팅
+        if (!post.getAuthor().isAnonymous()) {
+            fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.PROFILE, post.getAuthor().getBoardUserId())
+                    .stream().findFirst()
+                    .ifPresent(f -> postDetailResponse.getAuthor().setProfileImageUrl(f.getUrlPath()));
+        }
 
         boolean isEditable = false;
         boolean isBookmarked = false;
@@ -65,12 +79,16 @@ public class PostSearchAppService {
             Member member = memberService.findByAccountId(account.getAccountId());
             isBookmarked = bookmarkService.isBookmarked(post, member);
             isAuthor = post.isWrittenBy(account.getAccountId());
-
             isEditable = category.manageable(account.getRoles()) || isAuthor;
+
+            postLikeService.getMyReaction(postId, member.getBoardUserId())
+                    .ifPresent(likeType -> postDetailResponse.setMyReaction(likeType.name()));
         }
 
         postDetailResponse.setEditable(isEditable);
         postDetailResponse.setBookmarked(isBookmarked);
+        postDetailResponse.setLikeCount(postLikeService.countLikes(postId));
+        postDetailResponse.setDislikeCount(postLikeService.countDislikes(postId));
 
         ExposeState exposeState = post.getExposeOption().getExposeState();
         if(exposeState == ExposeState.PRIVACY) {
@@ -119,7 +137,15 @@ public class PostSearchAppService {
         }
 
         Category category = post.getCategory();
-        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post);
+        List<FileMetaData> attachments = fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.POST, postId);
+        RetrievePostDetailResponse postDetailResponse = new RetrievePostDetailResponse(post, attachments);
+
+        // 게시글 작성자 프로필 이미지 세팅 (비밀글)
+        if (!post.getAuthor().isAnonymous()) {
+            fileMetaDataRepository.findByAttachableTypeAndAttachableId(AttachableType.PROFILE, post.getAuthor().getBoardUserId())
+                    .stream().findFirst()
+                    .ifPresent(f -> postDetailResponse.getAuthor().setProfileImageUrl(f.getUrlPath()));
+        }
 
         boolean isEditable = false;
         boolean isBookmarked = false;
@@ -129,12 +155,16 @@ public class PostSearchAppService {
             Member member = memberService.findByAccountId(account.getAccountId());
             isBookmarked = bookmarkService.isBookmarked(post, member);
             isAuthor = post.isWrittenBy(account.getAccountId());
-
             isEditable = category.manageable(account.getRoles()) || isAuthor;
+
+            postLikeService.getMyReaction(postId, member.getBoardUserId())
+                    .ifPresent(likeType -> postDetailResponse.setMyReaction(likeType.name()));
         }
 
         postDetailResponse.setEditable(isEditable);
         postDetailResponse.setBookmarked(isBookmarked);
+        postDetailResponse.setLikeCount(postLikeService.countLikes(postId));
+        postDetailResponse.setDislikeCount(postLikeService.countDislikes(postId));
 
         post.increaseViews();
         return postDetailResponse;
@@ -197,6 +227,29 @@ public class PostSearchAppService {
         }catch (IllegalArgumentException e){
             throw new CustomIllegalArgumentException(ErrorCode.INVALID_SEARCH_OPTION, e);
         }
+    }
+
+    public List<RetrievePostListResponseElement> findTrendingPosts(Long categoryId, int days, int limit) {
+        BoardMenu boardMenu = boardMenuRepository.findById(categoryId)
+                .orElseThrow(() -> new NoSuchResourceException(ErrorCode.NOT_EXIST_CATEGORY));
+
+        Optional<Account> optional = SecurityUtils.getAccount();
+        List<Role> roles = optional.isPresent() ? optional.get().getRoles() : Collections.emptyList();
+
+        if (!boardMenu.accessible(roles)) {
+            throw new InvalidAuthorizationException(ErrorCode.ACCESS_DENIED);
+        }
+
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+        List<RetrievePostListResponseElement> trendingPosts =
+                postQueryRepository.findTrendingPosts(categoryId, since, limit);
+
+        trendingPosts.forEach(postDto -> {
+            int commentSize = commentRepository.countCommentsByPostId(postDto.getPostId());
+            postDto.setCommentSize(commentSize);
+        });
+
+        return trendingPosts;
     }
 
     //TODO : 쿼리문으로 처리?

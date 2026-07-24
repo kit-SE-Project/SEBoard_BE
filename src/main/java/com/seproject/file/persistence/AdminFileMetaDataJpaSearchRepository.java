@@ -5,6 +5,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.seproject.file.controller.dto.FileRequest.AdminFileRetrieveCondition;
 import com.seproject.file.controller.dto.FileSearchOption;
+import com.seproject.file.domain.model.AttachableType;
 import com.seproject.file.domain.repository.AdminFileMetaDataSearchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,9 +34,12 @@ public class AdminFileMetaDataJpaSearchRepository implements AdminFileMetaDataSe
     public Page<AdminFileRetrieveResponse> findFileMetaDataByCondition(AdminFileRetrieveCondition condition, Pageable pageable) {
         List<AdminFileRetrieveResponse> contents = queryFactory
                 .select(Projections.constructor(AdminFileRetrieveResponse.class,
-                        fileMetaData))
+                        fileMetaData, post))
                 .from(fileMetaData)
-                .leftJoin(fileMetaData.post, post)
+                .leftJoin(post).on(
+                        fileMetaData.attachableType.eq(AttachableType.POST)
+                                .and(fileMetaData.attachableId.eq(post.postId))
+                )
                 .where(
                         orphanEq(condition.getIsOrphan()),
                         searchOption(condition.getSearchOption(), condition.getQuery())
@@ -48,7 +52,10 @@ public class AdminFileMetaDataJpaSearchRepository implements AdminFileMetaDataSe
         Long count = queryFactory
                 .select(fileMetaData.count())
                 .from(fileMetaData)
-                .leftJoin(fileMetaData.post, post)
+                .leftJoin(post).on(
+                        fileMetaData.attachableType.eq(AttachableType.POST)
+                                .and(fileMetaData.attachableId.eq(post.postId))
+                )
                 .where(
                         orphanEq(condition.getIsOrphan()),
                         searchOption(condition.getSearchOption(), condition.getQuery())
@@ -79,9 +86,9 @@ public class AdminFileMetaDataJpaSearchRepository implements AdminFileMetaDataSe
         if(isOrphan==null){
             return null;
         }else if(isOrphan) {
-            return fileMetaData.post.isNull();
+            return fileMetaData.attachableId.isNull();
         }else{
-            return fileMetaData.post.isNotNull();
+            return fileMetaData.attachableId.isNotNull();
         }
     }
 }

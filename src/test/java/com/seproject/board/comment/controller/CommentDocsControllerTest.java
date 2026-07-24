@@ -45,7 +45,8 @@ class CommentDocsControllerTest extends ControllerTestSupport {
 										fieldWithPath("postId").description("게시글 id"),
 										fieldWithPath("contents").description("내용"),
 										fieldWithPath("isAnonymous").description("익명 여부"),
-										fieldWithPath("isReadOnlyAuthor").description("작성자만 읽기 여부")
+										fieldWithPath("isReadOnlyAuthor").description("작성자만 읽기 여부"),
+										fieldWithPath("attachmentIds").description("첨부파일 id 리스트")
 								),
 								responseFields(
 										fieldWithPath("message").description("메시지"),
@@ -77,7 +78,8 @@ class CommentDocsControllerTest extends ControllerTestSupport {
 								"comments/update-comment",
 								requestFields(
 										fieldWithPath("contents").description("내용"),
-										fieldWithPath("isReadOnlyAuthor").description("작성자만 읽기 여부")
+										fieldWithPath("isReadOnlyAuthor").description("작성자만 읽기 여부"),
+										fieldWithPath("attachmentIds").description("첨부파일 id 리스트")
 								),
 								responseFields(
 										fieldWithPath("message").description("메시지"),

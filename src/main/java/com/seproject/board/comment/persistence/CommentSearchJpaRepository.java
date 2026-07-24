@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CommentSearchJpaRepository extends CommentSearchRepository {
@@ -31,4 +32,7 @@ public interface CommentSearchJpaRepository extends CommentSearchRepository {
     List<Reply> findReplyListByCommentId(@Param("commentId") Long commentId);
     @Query("select count(r) from Reply r where r.post.postId = :postId and r.status = 'NORMAL'")
     int countReplyByPostId(@Param("postId") Long postId);
+
+    @Query(value = "select count(*) from comments where post_id = :postId and comment_type = 'comment' and created_at < :createdAt", nativeQuery = true)
+    long countRootCommentsBefore(@Param("postId") Long postId, @Param("createdAt") LocalDateTime createdAt);
 }

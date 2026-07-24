@@ -1,34 +1,7 @@
 package com.seproject.admin.account.application;
 
-import com.seproject.account.account.domain.Account;
-import com.seproject.account.account.domain.FormAccount;
-import com.seproject.account.account.domain.OAuthAccount;
-import com.seproject.account.role.domain.Role;
-import com.seproject.admin.account.controller.condition.AccountCondition;
-import com.seproject.admin.role.controller.dto.RoleDTO;
-import com.seproject.board.comment.domain.model.Comment;
-import com.seproject.board.common.Status;
-import com.seproject.board.menu.domain.Category;
-import com.seproject.board.post.domain.model.Bookmark;
-import com.seproject.board.post.domain.model.Post;
-import com.seproject.error.errorCode.ErrorCode;
-import com.seproject.error.exception.CustomIllegalArgumentException;
 import com.seproject.global.IntegrationTestSupport;
-import com.seproject.member.domain.Member;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static com.seproject.admin.account.controller.dto.AdminAccountDto.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AdminAccountAppServiceTest extends IntegrationTestSupport {

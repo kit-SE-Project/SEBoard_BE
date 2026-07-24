@@ -11,7 +11,7 @@
 //import com.seproject.account.role.service.RoleService;
 //import com.seproject.error.errorCode.ErrorCode;
 //import com.seproject.error.exception.CustomIllegalArgumentException;
-//import com.seproject.board.menu.domain.Menu;
+//import com.seproject.board.menu.domain.model.Menu;
 //import com.seproject.board.menu.domain.repository.MenuRepository;
 //import lombok.RequiredArgsConstructor;
 //import org.springframework.stereotype.Service;

@@ -56,7 +56,7 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().antMatchers("/static/**").antMatchers("/error");
+        return web -> web.ignoring().antMatchers("/static/**").antMatchers("/files/**").antMatchers("/error");
     }
 
     @Bean

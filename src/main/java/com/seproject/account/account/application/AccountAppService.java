@@ -3,6 +3,8 @@ package com.seproject.account.account.application;
 import com.seproject.account.account.controller.dto.MyPageDTO.MyInfoChangeRequest;
 import com.seproject.account.account.controller.dto.MyPageDTO.MyInfoChangeResponse;
 import com.seproject.account.account.controller.dto.MyPageDTO.MyInfoResponse;
+import com.seproject.board.common.controller.dto.ProfileResponse.DeveloperProfileInfo;
+import com.seproject.developer.service.DeveloperProfileService;
 import com.seproject.account.account.controller.dto.PasswordDTO.ResetPasswordResponse;
 import com.seproject.account.account.domain.Account;
 import com.seproject.account.account.service.AccountService;
@@ -18,6 +20,9 @@ import com.seproject.account.utils.SecurityUtils;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomAuthenticationException;
 import com.seproject.error.exception.CustomIllegalArgumentException;
+import com.seproject.file.domain.model.AttachableType;
+import com.seproject.file.domain.model.FileMetaData;
+import com.seproject.file.domain.repository.FileMetaDataRepository;
 import com.seproject.member.domain.Member;
 import com.seproject.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -147,6 +152,8 @@ public class AccountAppService {
     }
 
     private final MemberService memberService;
+    private final DeveloperProfileService developerProfileService;
+    private final FileMetaDataRepository fileMetaDataRepository;
 
     public MyInfoResponse findMyPage() {
         Account account = SecurityUtils.getAccount()
@@ -154,9 +161,17 @@ public class AccountAppService {
 
         Member findMember = memberService.findByAccountId(account.getAccountId());
 
-        return MyInfoResponse.toDTO(findMember,account, account.getRoles().stream()
+        String profileImageUrl = fileMetaDataRepository
+                .findByAttachableTypeAndAttachableId(AttachableType.PROFILE, findMember.getBoardUserId())
+                .stream().findFirst().map(FileMetaData::getUrlPath).orElse(null);
+
+        DeveloperProfileInfo developerProfileInfo = developerProfileService.findByAccount(account)
+                .map(DeveloperProfileInfo::new)
+                .orElse(null);
+
+        return MyInfoResponse.toDTO(findMember, account, account.getRoles().stream()
                 .map(Role::getAuthority)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList()), profileImageUrl, developerProfileInfo);
     }
 
     @Transactional

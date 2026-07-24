@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import static com.seproject.board.comment.application.dto.CommentCommand.CommentListFindCommand;
+import static com.seproject.board.comment.controller.dto.CommentResponse.BestCommentResponse;
 import static com.seproject.board.comment.controller.dto.CommentResponse.CommentListResponse;
 import static com.seproject.board.common.controller.dto.MessageResponse.CreateAndUpdateMessage;
 import static com.seproject.board.post.controller.dto.PostRequest.RetrievePrivacyPostRequest;
@@ -78,6 +79,17 @@ public class PostController {
         return ResponseEntity.ok(pinedPostList);
     }
 
+    @Operation(summary = "인기 게시글 조회", description = "최근 N일 내 추천이 많은 게시글을 조회한다.")
+    @GetMapping("/trending")
+    public ResponseEntity<List<RetrievePostListResponseElement>> retrieveTrendingPosts(
+            @RequestParam Long categoryId,
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "5") int limit) {
+        List<RetrievePostListResponseElement> trendingPosts =
+                postSearchAppService.findTrendingPosts(categoryId, days, limit);
+        return ResponseEntity.ok(trendingPosts);
+    }
+
     @Parameter(name = "request", description = "게시물 생성에 필요한 제목, 본문, 공개여부, 익명 여부, 첨부파일, 카테고리 pk, 상단 고정 여부 정보")
     @Operation(summary = "게시글 작성", description = "사용자는 게시글을 작성한다")
     @PostMapping
@@ -110,6 +122,15 @@ public class PostController {
         postAppService.removePost(postId);
 
         return ResponseEntity.ok(CreateAndUpdateMessage.of(postId, "게시글 삭제 성공"));
+    }
+
+    @Operation(summary = "베스트 댓글 조회", description = "게시물에서 추천이 많은 댓글을 조회한다.")
+    @GetMapping("/{postId}/comments/best")
+    public ResponseEntity<List<BestCommentResponse>> retrieveBestComments(
+            @PathVariable Long postId,
+            @RequestParam(defaultValue = "3") int limit) {
+        List<BestCommentResponse> bestComments = commentAppService.retrieveBestComments(postId, limit);
+        return ResponseEntity.ok(bestComments);
     }
 
     @Operation(summary = "게시물에 달린 댓글 조회", description = "게시물에 달린 댓글을 조회한다")

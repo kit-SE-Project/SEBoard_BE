@@ -2,7 +2,7 @@ package com.seproject.account.authorization.domain;
 
 import com.seproject.account.authorization.utils.AuthorizationProperty;
 import com.seproject.admin.menu.domain.SelectOption;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;

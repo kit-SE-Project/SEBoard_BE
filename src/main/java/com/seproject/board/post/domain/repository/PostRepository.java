@@ -1,17 +1,21 @@
 package com.seproject.board.post.domain.repository;
 
 import com.seproject.board.common.Status;
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.post.domain.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
+
+    @Query("select count(p) from Post p where p.author.boardUserId = :memberId and p.status = 'NORMAL'")
+    long countByAuthorId(@Param("memberId") Long memberId);
     @Query(value = "select exists(select * from posts where category_id = :categoryId)", nativeQuery = true)
     boolean existsByCategoryId(@Param("categoryId") Long categoryId);
 
@@ -36,5 +40,21 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Modifying
     @Query("update Post p set p.category = :to where p.category = :from")
     void changeCategory(@Param("from") Category from, @Param("to") Category to);
+
+    @Query("select distinct p from Post p " +
+            "join fetch p.category c " +
+            "join fetch c.superMenu sm " +
+            "join fetch p.author author " +
+            "left join fetch author.account account " +
+            "where (c.urlInfo = :boardUrlInfo or sm.urlInfo = :boardUrlInfo) " +
+            "and p.status = 'NORMAL' " +
+            "and p.baseTime.createdAt >= :fromDateTime " +
+            "and p.baseTime.createdAt < :toDateTime " +
+            "order by p.baseTime.createdAt desc")
+    List<Post> findNormalPostsForDepartmentBoardExport(
+            @Param("boardUrlInfo") String boardUrlInfo,
+            @Param("fromDateTime") LocalDateTime fromDateTime,
+            @Param("toDateTime") LocalDateTime toDateTime
+    );
 
 }

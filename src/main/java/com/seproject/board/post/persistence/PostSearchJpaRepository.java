@@ -1,6 +1,5 @@
 package com.seproject.board.post.persistence;
 
-import com.seproject.board.post.controller.dto.PostResponse;
 import com.seproject.board.post.controller.dto.PostResponse.RetrievePostListResponseElement;
 import com.seproject.board.post.domain.repository.PostSearchRepository;
 import org.springframework.data.domain.Page;
@@ -9,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface PostSearchJpaRepository extends PostSearchRepository {
     @Query("select count(p) from Post p right join Member m on p.author.boardUserId=m.boardUserId where p.author.account.loginId = :loginId and p.status = 'NORMAL'")
@@ -30,9 +28,6 @@ public interface PostSearchJpaRepository extends PostSearchRepository {
     Page<RetrievePostListResponseElement> findPostByLoginId(@Param("loginId") String loginId, Pageable pagingInfo);
     @Query("select count(*) from Post p where p.author.account.loginId = :loginId and p.status = 'NORMAL'")
     Integer countsPostByLoginId(@Param("loginId") String loginId);
-    @Query("select new com.seproject.board.post.controller.dto.PostResponse$RetrievePostDetailResponse(p) " +
-            "from Post p where p.postId = :id and p.status = 'NORMAL'")
-    Optional<PostResponse.RetrievePostDetailResponse> findPostDetailById(@Param("id") Long id);
     @Query("select new com.seproject.board.post.controller.dto.PostResponse$RetrievePostListResponseElement(p)" +
             "from Post p where (p.category.menuId = :categoryId or p.category.superMenu.menuId = :categoryId) and p.pined = true and p.status = 'NORMAL' order by p.baseTime.createdAt desc")
     List<RetrievePostListResponseElement> findPinedPostByCategoryId(@Param("categoryId") Long categoryId);

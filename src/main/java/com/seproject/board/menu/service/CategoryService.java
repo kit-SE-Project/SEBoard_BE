@@ -1,6 +1,6 @@
 package com.seproject.board.menu.service;
 
-import com.seproject.board.menu.domain.Category;
+import com.seproject.board.menu.domain.model.Category;
 import com.seproject.board.menu.domain.repository.CategoryRepository;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomIllegalArgumentException;

@@ -4,8 +4,8 @@ import com.seproject.account.account.domain.Account;
 import com.seproject.account.role.domain.Role;
 import com.seproject.account.utils.SecurityUtils;
 import com.seproject.admin.menu.utils.DelegatingMenuProvider;
-import com.seproject.board.menu.domain.*;
 import com.seproject.board.menu.controller.dto.CategoryResponse;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.board.menu.service.MenuService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -94,10 +94,10 @@ public class CategoryAppService {
             if (menu.exposable(roles)) {
                 List<Menu> subMenus = subMenuMap.getOrDefault(menu.getMenuId(), Collections.emptyList());
 
-                CategoryResponse categoryResponse = new CategoryResponse(menu);
+                CategoryResponse categoryResponse = new CategoryResponse(menu, roles);
 
                 subMenus.stream()
-                        .map(CategoryResponse::new)
+                        .map(subMenu -> new CategoryResponse(subMenu, roles))
                         .forEach(categoryResponse::addSubMenu);
 
                 categoryResponses.add(categoryResponse);

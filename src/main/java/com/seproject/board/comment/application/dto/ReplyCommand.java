@@ -3,6 +3,9 @@ package com.seproject.board.comment.application.dto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.Collections;
+import java.util.List;
+
 public class ReplyCommand {
     @Getter
     @Builder
@@ -13,6 +16,8 @@ public class ReplyCommand {
         private String contents;
         private boolean isAnonymous;
         private boolean isOnlyReadByAuthor;
+        @Builder.Default
+        private List<Long> attachmentIds = Collections.emptyList();
     }
 
     @Getter
@@ -21,5 +26,7 @@ public class ReplyCommand {
         private Long replyId;
         private String contents;
         private boolean isOnlyReadByAuthor;
+        @Builder.Default
+        private List<Long> attachmentIds = Collections.emptyList();
     }
 }

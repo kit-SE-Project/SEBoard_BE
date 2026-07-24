@@ -2,7 +2,7 @@ package com.seproject.account.authorization.domain;
 
 import com.seproject.account.authorization.utils.AuthorizationProperty;
 import com.seproject.admin.menu.domain.SelectOption;
-import com.seproject.board.menu.domain.Menu;
+import com.seproject.board.menu.domain.model.Menu;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomIllegalArgumentException;
 import lombok.Getter;
