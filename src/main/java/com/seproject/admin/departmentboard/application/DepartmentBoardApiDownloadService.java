@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -51,12 +52,16 @@ import java.util.zip.ZipOutputStream;
 @Transactional(readOnly = true)
 public class DepartmentBoardApiDownloadService {
 
+    private static final String DEFAULT_FRONTEND_URL = "https://seboard.site";
     private static final DateTimeFormatter JOB_ID_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     private final AdminDashBoardServiceImpl dashBoardService;
     private final FileMetaDataRepository fileMetaDataRepository;
     private final ObjectMapper objectMapper;
     private final PostRepository postRepository;
+
+    @Value("${frontend.url:https://seboard.site}")
+    private String frontendUrl;
 
     public DepartmentBoardResult preview(DepartmentBoardRequest request) {
         checkAuthorization();
@@ -201,6 +206,7 @@ public class DepartmentBoardApiDownloadService {
                 .categoryId(post.getCategory().getMenuId())
                 .categoryName(post.getCategory().getName())
                 .boardName(post.getCategory().getSuperMenu().getName())
+                .sourceUrl(buildSourceUrl(post))
                 .contentsHtml(post.getContents())
                 .contentsText(stripTags(post.getContents()))
                 .attachments(attachments)
@@ -306,7 +312,30 @@ public class DepartmentBoardApiDownloadService {
         return DepartmentBoardSuccess.builder()
                 .articleNo(post.getPostId())
                 .title(post.getTitle())
+                .sourceUrl(buildSourceUrl(post))
                 .build();
+    }
+
+    private String buildSourceUrl(Post post) {
+        String boardUrlInfo = "";
+
+        if (post.getCategory() != null && post.getCategory().getSuperMenu() != null) {
+            boardUrlInfo = post.getCategory().getSuperMenu().getUrlInfo();
+        }
+
+        if ((boardUrlInfo == null || boardUrlInfo.isBlank()) && post.getCategory() != null) {
+            boardUrlInfo = post.getCategory().getUrlInfo();
+        }
+
+        if (boardUrlInfo == null || boardUrlInfo.isBlank() || post.getPostId() == null) {
+            return "";
+        }
+
+        String baseUrl = frontendUrl == null || frontendUrl.isBlank()
+                ? DEFAULT_FRONTEND_URL
+                : frontendUrl.trim();
+
+        return baseUrl.replaceAll("/+$", "") + "/" + boardUrlInfo + "/" + post.getPostId();
     }
 
     private DepartmentBoardFailure failure(Long articleNo, String reason, String message) {
@@ -384,6 +413,7 @@ public class DepartmentBoardApiDownloadService {
         private Long categoryId;
         private String categoryName;
         private String boardName;
+        private String sourceUrl;
         private String contentsHtml;
         private String contentsText;
         private List<ArticleAttachment> attachments;

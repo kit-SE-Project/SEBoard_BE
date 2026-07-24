@@ -59,6 +59,7 @@ public class DepartmentBoardDTO {
     public static class DepartmentBoardSuccess {
         private Long articleNo;
         private String title;
+        private String sourceUrl;
     }
 
     @Data
