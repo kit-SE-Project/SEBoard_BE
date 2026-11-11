@@ -1,0 +1,52 @@
+{
+  "source": "https://github.com/serverallday/serverAllDay_md",
+  "commit": "356f303f3928f2074718bc02e2bfa5f44084fba8",
+  "sourcePath": "proxmox-node-helper/source/node-helper/node_helper",
+  "purpose": "Unmodified latest upstream protocol simulation fixture; never imported by production manager",
+  "files": [
+    {
+      "file": "__init__.py",
+      "sha256": "4520369008737453d8d4c35429e867aa6ba7075317ea32cf74d2724e90108df4"
+    },
+    {
+      "file": "cli.py",
+      "sha256": "3648dc58d868bf06a0637310d0c600aec6979444290f36e51960febfe4e64515"
+    },
+    {
+      "file": "config.py",
+      "sha256": "25be7e6b851e9aa7d55dbb7b580a9958ac91a5f64e611e11c910e2ec22088a90"
+    },
+    {
+      "file": "errors.py",
+      "sha256": "2a53b0e0148d4a204345851279f508125dbb2df17b47269cb2a80d58e00d1f33"
+    },
+    {
+      "file": "files.py",
+      "sha256": "be063059f0b10c103bfc8b914ce04361c306785388fa09dea81606039fe42017"
+    },
+    {
+      "file": "host.py",
+      "sha256": "a4377e1c253b7d4828dfb1ab9810c3c9cffab8c5e05fd31fa82e3e36fd4a00e4"
+    },
+    {
+      "file": "rules.py",
+      "sha256": "62d731e4887d72368f6593c003a919c66d414e8b2ea570f6bb74e340a94be1a0"
+    },
+    {
+      "file": "service.py",
+      "sha256": "c0f1d906eaace8cb24b2d145653f2defefc9d015dd9312ab34a566720cc1cdd4"
+    },
+    {
+      "file": "snippets.py",
+      "sha256": "c448d3ec172f2e35c986336aba6406f77f1e935b7b962ada9a739300888cb031"
+    },
+    {
+      "file": "store.py",
+      "sha256": "66cebcccc12b3815581f703f52c8a647a930539a1377f45d1641828121ac7bfb"
+    },
+    {
+      "file": "validation.py",
+      "sha256": "8409c486ccbef99303ef41ac165b705dc6742e98253333022706aa5de627110b"
+    }
+  ]
+}

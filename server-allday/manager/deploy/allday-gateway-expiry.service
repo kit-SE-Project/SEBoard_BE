@@ -1,0 +1,7 @@
+[Unit]
+Description=Expire Server Allday SSH ingress leases
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/server-allday-manager/scripts/gateway.py --settings /etc/server-allday-gateway.json --reap
+User=root

@@ -1,0 +1,21 @@
+[Unit]
+Description=Server Allday JupyterLab for %i
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=~
+UMask=0077
+ExecStartPre=/usr/bin/mkdir -p notebooks
+ExecStart=/opt/server-allday/venv/bin/jupyter lab --no-browser --ip=127.0.0.1 --port=8888 --ServerApp.port_retries=0 --ServerApp.root_dir=notebooks
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

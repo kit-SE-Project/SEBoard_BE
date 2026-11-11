@@ -1,0 +1,23 @@
+{
+  "mode": "system",
+  "serverId": 1,
+  "nodeName": "pve01",
+  "nodeIp": "192.0.2.20",
+  "nodeIngressPort": 7540,
+  "uplinkBridge": "vmbr0",
+  "vmBridge": "vmbr1",
+  "vmSubnet": "10.70.1.0/24",
+  "vmGateway": "10.70.1.1",
+  "vmInterface": "ens18",
+  "nameservers": ["1.1.1.1", "8.8.8.8"],
+  "blockedNetworks": ["192.0.2.0/24"],
+  "storageIds": ["local", "local-lvm"],
+  "snippetStorage": "local",
+  "snippetDirectory": "/var/lib/vz/snippets",
+  "stateDirectory": "/var/lib/server-allday/node-helper",
+  "vmIdMin": 10000,
+  "vmIdMax": 19999,
+  "conntrackZones": [0, 1],
+  "commandTimeoutSeconds": 15,
+  "lockTimeoutSeconds": 20
+}

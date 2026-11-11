@@ -1,0 +1,2 @@
+# Ubuntu shadow hash used only for the team's Node Helper cloud-init snippets.
+passlib==1.7.4 --hash=sha256:aa6bca462b8d8bda89c70b382f0c298a20b5560af6cbfa2dce410c0a2fb669f1

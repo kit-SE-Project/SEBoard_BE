@@ -60,7 +60,13 @@ public class TokenService {
         }
 
         try {
-            boolean isLargeToken = isLargeToken(jwt);
+            var signed = jwtDecoder.getSignedClaims(jwt);
+            Object type = signed.getHeader().get("token_type");
+            boolean isLargeToken = JWTProperties.LARGE_REFRESH_TOKEN.equals(type);
+            if (signed.getBody().getExpiration() == null
+                    || (!isLargeToken && !JWTProperties.REFRESH_TOKEN.equals(type))) {
+                throw new CustomAuthenticationException(ErrorCode.DISABLE_REFRESH_TOKEN, null);
+            }
 
             if(isLargeToken) {
                 logoutLargeRefreshTokenRepository.save(new LogoutLargeRefreshToken(refreshToken));
