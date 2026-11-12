@@ -16,7 +16,8 @@ public class SecurityConfiguration {
     @Bean SecurityFilterChain security(HttpSecurity http,AuthFilter filter) throws Exception {
         return http.csrf(c->c.disable()).cors(c->c.disable()).formLogin(c->c.disable()).httpBasic(c->c.disable()).logout(c->c.disable())
             .sessionManagement(c->c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(c->c.requestMatchers("/health","/formLogin","/refresh").permitAll()
+            .authorizeHttpRequests(c->c.requestMatchers("/health","/formLogin","/refresh",SeBoardSsoController.START,SeBoardSsoController.CALLBACK,
+                    SeBoardSsoController.LOGOUT).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS,"/**").permitAll().anyRequest().authenticated())
             .addFilterBefore(filter,UsernamePasswordAuthenticationFilter.class).build();
     }

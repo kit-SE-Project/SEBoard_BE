@@ -92,3 +92,8 @@ management:
     web:
       exposure:
         include: "*"
+
+allday:
+  sso:
+    callback-url: ${ALLDAY_SSO_CALLBACK_URL:}
+    client-secret: ${ALLDAY_SSO_CLIENT_SECRET:}

@@ -1,6 +1,6 @@
 # Server AllDay 프론트 API
 
-`Authorization: Bearer <SEBoard access token>` 헤더를 사용합니다. 카테고리 관리 API에는 SEBoard DB의 `ROLE_ADMIN`이 필요합니다.
+`AllDay 세션 쿠키`를 사용합니다. 로그인은 같은 오리진의 `GET /api/v1/sso/start`에서 시작합니다. 로그인 상태는 `GET /api/v1/me`에서 확인합니다. 상태를 변경하는 요청에는 브라우저가 대여 사이트의 `Origin` 헤더를 보냅니다. 카테고리 관리 API에는 SEBoard DB의 `ROLE_ADMIN`이 필요합니다.
 
 | 요청 | 본문 | 성공 |
 | --- | --- | --- |

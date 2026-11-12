@@ -41,13 +41,21 @@ public class AuthFilter extends OncePerRequestFilter {
     @Override protected void doFilterInternal(HttpServletRequest req,HttpServletResponse res,FilterChain chain) throws ServletException,IOException {
         String requestId=UUID.randomUUID().toString();req.setAttribute("requestId",requestId);res.setHeader("X-Request-Id",requestId);
         res.setHeader("Cache-Control","no-store");res.setHeader("X-Content-Type-Options","nosniff");
-        if(Set.of("/health","/formLogin","/refresh").contains(req.getRequestURI())||req.getMethod().equals("OPTIONS")) {chain.doFilter(req,res);return;}
+        if(Set.of("/health","/formLogin","/refresh",SeBoardSsoController.START,SeBoardSsoController.CALLBACK,
+            SeBoardSsoController.LOGOUT).contains(req.getRequestURI())||req.getMethod().equals("OPTIONS")) {chain.doFilter(req,res);return;}
         String header=req.getHeader("Authorization");String token=header!=null&&header.startsWith("Bearer ")?header.substring(7):"";
         Actor actor=null;
         boolean internal=req.getRequestURI().startsWith("/api/internal/");
         if(internal && matches(token,worker)) actor=new Actor(0,"WORKER");
         else if(!internal&&(demo||seboard.enabled())) {
-            try{actor=seboard.enabled()?seboard.authenticate(token):demoAuth.authenticate(token);}
+            try {
+                if(seboard.enabled()) {
+                    if(!Set.of("GET","HEAD").contains(req.getMethod())) seboard.requireOrigin(req.getHeader("Origin"));
+                    var identity=seboard.authenticate(SeBoardSsoController.sessionCookie(req,seboard));
+                    actor=identity.actor();
+                    req.setAttribute("seboardNickname",identity.nickname());
+                } else actor=demoAuth.authenticate(token);
+            }
             catch(ApiProblem e){reject(res,e.status,e.code,e.getMessage(),requestId);return;}
             catch(org.springframework.dao.DataAccessException e){reject(res,503,"AUTH_STORE_UNAVAILABLE","인증 저장소를 사용할 수 없습니다.",requestId);return;}
         }

@@ -50,7 +50,11 @@ allday:
   minimum-switch-seconds: ${MINIMUM_SWITCH_SECONDS:3600}
   prepare-lead-seconds: ${PREPARE_LEAD_SECONDS:3600}
   observation-max-age-seconds: ${OBSERVATION_MAX_AGE_SECONDS:120}
-  seboard-identity-url: ${SEBOARD_IDENTITY_URL:}
+  seboard-sso:
+    backend-origin: ${SEBOARD_SSO_BACKEND_ORIGIN:}
+    portal-url: ${SEBOARD_SSO_PORTAL_URL:}
+    public-origin: ${ALLDAY_SSO_PUBLIC_ORIGIN:}
+    client-secret: ${ALLDAY_SSO_CLIENT_SECRET:}
   seboard-rental-authority: ${SEBOARD_RENTAL_AUTHORITY:ROLE_KUMOH}
   real-rental-member-ids: ${REAL_RENTAL_MEMBER_IDS:}
   immediate-reservation-until: ${IMMEDIATE_RESERVATION_UNTIL:}

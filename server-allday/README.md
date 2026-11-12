@@ -9,16 +9,31 @@ SEBoard의 로그인과 회원 권한으로 Proxmox 컴퓨터를 예약·대여�
 | `server-allday/manager` | Proxmox REST API와 노드 Helper를 사용하는 작업 실행기 | Python 3.12+ 및 OpenSSH 클라이언트 |
 | `server-allday/node-helper` | 노드의 Cloud-Init, 학생 SSH 진입과 반납 검증 | 각 Proxmox 호스트 |
 
-## SEBoard 인증 연결
+## SEBoard 통합 로그인
 
-브라우저에는 하나의 API 주소를 제공하세요. 그 주소의 `/formLogin`, `/refresh`, `/logoutProc`, `/mypage`는 기존 SEBoard로, `/api/v1/`은 AllDay API로 전달합니다. 기존 SEBoard 배포에 충돌하는 경로가 있다면 AllDay 전용 API 호스트에서 이 경로를 분기합니다. AllDay 매니저는 사설 주소에서 `/api/internal/`에 접속합니다.
+게시판 메뉴의 서버 대여 링크는 AllDay의 `GET /api/v1/sso/start`로 이동합니다. AllDay가 로그인 요청을 브라우저 쿠키와 연결하고 SE 게시판으로 이동합니다. SE 프론트는 기존 로그인 상태로 코드를 요청합니다. SE 로그인이 만료되었으면 게시판 로그인 화면을 거쳐 요청을 이어갑니다.
 
-AllDay API는 사용자 Bearer 토큰을 SEBoard의 `GET /internal/allday/identity`에 전달합니다. 이 경로는 운영망 내부의 SEBoard upstream으로 라우팅합니다. SEBoard는 기존 JWT 서명·만료 및 Redis 로그아웃 확인을 거쳐 DB에서 정상 계정과 현재 역할을 읽습니다. AllDay의 `memberId`는 이때 확인한 `accounts.account_id`입니다. `/mypage`도 같은 `memberId`를 제공하며 기존 `userId`는 게시판 사용자 ID입니다.
+- SEBoard는 등록된 AllDay 콜백으로만 일회용 코드와 `state`를 보냅니다. 코드는 최대 60초 동안 유효하며, AllDay가 백엔드에서 공유 비밀과 PKCE S256 검증값으로 교환합니다.
+- 브라우저는 AllDay의 호스트 전용 `HttpOnly` 세션 쿠키를 받습니다. AllDay가 요청마다 SEBoard에 현재 계정과 역할을 조회하며, `memberId`는 SEBoard `accounts.account_id`입니다. 관리자 역할 변경과 계정 삭제는 다음 요청부터 반영됩니다.
+- AllDay 세션은 발급에 사용한 SEBoard 로그인 토큰의 만료 시각까지 유효합니다. SEBoard에서 로그아웃하면 해당 계정의 기존 대여 세션도 무효화됩니다. AllDay 로그아웃은 현재 브라우저의 대여 세션을 종료합니다.
+- `ROLE_ADMIN`은 장비 및 카테고리를 관리할 수 있습니다. 대여 자격은 `SEBOARD_RENTAL_AUTHORITY`에 지정한 DB 역할로 확인하며 기본값은 `ROLE_KUMOH`입니다. 실장비를 지정 계정에만 개방할 때는 `REAL_RENTAL_MEMBER_IDS`를 설정합니다.
+- 기존 대여 DB의 개발·데모 회원 ID가 SEBoard 계정 ID와 충돌하면 새 세션을 거부합니다. 기존 대여를 이전할 때는 대여 소유자와 실제 SEBoard 계정 매핑을 먼저 확인하세요.
 
-- `ROLE_ADMIN`은 장비 및 카테고리를 관리할 수 있습니다.
-- 일반 회원의 대여 자격은 `SEBOARD_RENTAL_AUTHORITY`에 지정한 DB 역할로 확인합니다. 기본값은 금오인 인증 역할인 `ROLE_KUMOH`입니다. 실장비를 시험 계정에만 개방할 때는 `REAL_RENTAL_MEMBER_IDS`에 허용할 SEBoard 계정 ID를 쉼표로 구분해 지정합니다.
-- 기존 대여 DB의 개발·데모 회원 ID가 SEBoard 계정 ID와 충돌하면 `503 SEBOARD_IDENTITY_CONFLICT`로 거부합니다. 기존 운영 대여를 이전하는 경우 대여 소유자와 실제 SEBoard 계정 매핑을 먼저 확인하세요.
-- Worker는 별도 `WORKER_TOKEN`을 사용합니다. 사용자 인증 결과와 권한은 매 요청에서 다시 확인합니다.
+### 웹 라우팅과 설정
+
+운영에서는 두 웹사이트 모두 HTTPS를 사용합니다. AllDay 웹과 `/api/v1/`은 같은 공개 오리진에서 제공하고, `/api/internal/`은 매니저 전용으로 제공합니다. SE 웹의 `/allday/sso`는 프론트 SPA 경로이고, `POST /allday/sso/authorize`는 기존 SE API 주소를 통해 SE 백엔드로 전달합니다. `POST /internal/allday/sso/exchange`와 `POST /internal/allday/sso/identity`는 백엔드 간 경로이며 공개 프론트에서 라우팅하지 않습니다.
+
+| 설정 위치 | 환경 변수 | 예시 값 |
+| --- | --- | --- |
+| SE 백엔드 | `ALLDAY_SSO_CALLBACK_URL` | `https://rental.example/api/v1/sso/callback` |
+| SE 백엔드, AllDay 백엔드 | `ALLDAY_SSO_CLIENT_SECRET` | 두 서버에 같은 전용 무작위 비밀값 |
+| SE 프론트 빌드 | `REACT_APP_ALLDAY_ORIGIN` | `https://rental.example` |
+| AllDay 백엔드 | `SEBOARD_SSO_BACKEND_ORIGIN` | `https://seboard-api.internal.example` |
+| AllDay 백엔드 | `SEBOARD_SSO_PORTAL_URL` | `https://board.example/allday/sso` |
+| AllDay 백엔드 | `ALLDAY_SSO_PUBLIC_ORIGIN`, `CORS_ORIGIN` | `https://rental.example` |
+| AllDay 웹 빌드 | `EXPO_PUBLIC_SEBOARD_SSO_ENABLED` | `true` |
+
+SE-FE GitHub 빌드는 `ALLDAY_ORIGIN` 저장소 변수를 읽습니다. AllDay 세션 테이블은 Flyway V17이 생성합니다. SE 백엔드는 기존 PostgreSQL 계정·권한과 Redis 6.2 이상을 사용합니다. 프록시 액세스 로그에서 콜백 쿼리와 인증 헤더를 제외하세요. [OAuth 보안 권고 RFC 9700](https://www.rfc-editor.org/rfc/rfc9700.html)
 
 ## 데이터베이스 및 실행
 
@@ -29,7 +44,6 @@ SEBoard PostgreSQL 인스턴스에 AllDay 전용 데이터베이스(예: `server
 | `DB_URL` | AllDay 전용 PostgreSQL JDBC URL |
 | `DB_USER`, `DB_PASSWORD` | AllDay 앱 DB 계정 |
 | `DB_MIGRATION_USER`, `DB_MIGRATION_PASSWORD` | 별도 Flyway 계정 |
-| `SEBOARD_IDENTITY_URL` | `https://<내부-SEBoard>/internal/allday/identity` 또는 같은 호스트의 `http://127.0.0.1:8080/internal/allday/identity` |
 | `PRIMARY_ENABLED` | `true` |
 | `CREDENTIAL_KEY` | VM 암호 보관용 무작위 32바이트 키의 Base64 값 |
 | `WORKER_TOKEN` | 관리 서버와 공유하는 별도 난수 토큰 |

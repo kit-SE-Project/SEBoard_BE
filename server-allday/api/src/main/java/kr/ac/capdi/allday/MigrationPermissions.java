@@ -23,6 +23,7 @@ public class MigrationPermissions implements Callback {
                 if(result.next())try(var revoke=context.getConnection().createStatement()){
                     revoke.execute("REVOKE INSERT,UPDATE,DELETE ON public.flyway_schema_history FROM capdi_worker");
                     revoke.execute("REVOKE ALL ON public.accounts,public.roles,public.role_accounts,public.board_users,public.auth_session,public.auth_login_throttle FROM capdi_worker");
+                    revoke.execute("REVOKE ALL ON public.allday_sso_login,public.allday_sso_session FROM capdi_worker");
                     revoke.execute("REVOKE ALL ON SEQUENCE public.accounts_account_id_seq,public.roles_role_id_seq,public.board_users_board_user_id_seq FROM capdi_worker");
                 }
             }

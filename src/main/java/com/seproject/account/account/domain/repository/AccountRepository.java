@@ -16,6 +16,9 @@ public interface AccountRepository extends JpaRepository<Account,Long> {
     @Query("select a from Account a left join fetch a.roleAccounts ra left join fetch ra.role r where a.loginId = :loginId and a.status = 'NORMAL'")
     Optional<Account> findByLoginIdWithRole(@Param("loginId") String loginId);
 
+    @Query("select distinct a from Account a left join fetch a.roleAccounts ra left join fetch ra.role where a.accountId = :id and a.status = 'NORMAL'")
+    Optional<Account> findActiveByIdWithRole(@Param("id") long id);
+
     boolean existsByLoginId(String loginId);
 
     @Modifying
