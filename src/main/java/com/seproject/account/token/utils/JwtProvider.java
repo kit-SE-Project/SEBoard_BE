@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -50,6 +51,7 @@ public class JwtProvider {
                 .setHeaderParam("token_type", type)
                 .setHeaderParam(JWTProperties.ALGORITHM, alg)
                 .setSubject(extractSubject(token))
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(IssuedAt)
                 .setExpiration(expiredAt)
                 .claim(JWTProperties.AUTHORITIES,token.getAuthorities().stream()

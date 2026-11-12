@@ -2,6 +2,7 @@ package com.seproject.allday;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seproject.account.account.domain.FormAccount;
+import com.seproject.account.account.domain.OAuthAccount;
 import com.seproject.account.account.domain.repository.AccountRepository;
 import com.seproject.account.account.domain.repository.OAuthAccountRepository;
 import com.seproject.account.common.authentication.handler.failure.CustomAuthenticationFailureHandler;
@@ -65,16 +66,18 @@ class AlldaySsoControllerTest {
     private final Map<String, String> records = new ConcurrentHashMap<>();
     private final ObjectMapper json = new ObjectMapper();
     private AlldaySsoService sso;
+    private TokenService tokens;
+    private JwtDecoder decoder;
     private MockMvc mvc;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setup() {
         String secret = Base64.getEncoder().encodeToString(new byte[32]);
-        JwtDecoder decoder = new JwtDecoder(accounts);
+        decoder = new JwtDecoder(accounts);
         ReflectionTestUtils.setField(provider, "secret", secret);
         ReflectionTestUtils.setField(decoder, "secret", secret);
-        var tokens = new TokenService(accounts, oauth, provider, decoder,
+        tokens = new TokenService(accounts, oauth, provider, decoder,
                 mock(LogoutRefreshTokenRepository.class), mock(LogoutLargeRefreshTokenRepository.class));
         var failures = new CustomAuthenticationFailureHandler(new ResponseWriter(), new ErrorCodeConverter());
         var redis = mock(StringRedisTemplate.class);
@@ -82,6 +85,10 @@ class AlldaySsoControllerTest {
         when(redis.opsForValue()).thenReturn(values);
         when(values.get(anyString())).thenAnswer(args -> records.get(args.getArgument(0)));
         when(values.getAndDelete(anyString())).thenAnswer(args -> records.remove(args.getArgument(0)));
+        when(values.setIfAbsent(anyString(), anyString())).thenAnswer(args ->
+                records.putIfAbsent(args.getArgument(0), args.getArgument(1)) == null);
+        when(values.setIfPresent(anyString(), anyString())).thenAnswer(args ->
+                records.replace(args.getArgument(0), args.getArgument(1)) != null);
         when(values.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenAnswer(args ->
                 records.putIfAbsent(args.getArgument(0), args.getArgument(1)) == null);
         doAnswer(args -> records.put(args.getArgument(0), args.getArgument(1))).when(values)
@@ -131,6 +138,7 @@ class AlldaySsoControllerTest {
 
         var result = sso.exchange(SECRET, code, STATE, VERIFIER);
         assertEquals(List.of("ROLE_ADMIN"), result.get("authorities"));
+        assertTrue(Instant.ofEpochMilli((Long) result.get("expiresAt")).isAfter(Instant.now().plusSeconds(28790)));
         assertEquals(401, assertThrows(ResponseStatusException.class,
                 () -> sso.exchange(SECRET, code, STATE, VERIFIER)).getRawStatusCode());
 
@@ -148,6 +156,36 @@ class AlldaySsoControllerTest {
                 () -> sso.identity(SECRET, grant)).getRawStatusCode());
         assertEquals(401, assertThrows(ResponseStatusException.class,
                 () -> sso.exchange(SECRET, pending, STATE, VERIFIER)).getRawStatusCode());
+    }
+
+    @Test
+    void refreshResolvesKakaoSubjectToTheCurrentBoardAccount() {
+        var account = OAuthAccount.builder().accountId(83L).loginId("student@example.test")
+                .status(Status.NORMAL).provider("kakao").sub("kakao-subject")
+                .roleAccounts(List.of(new RoleAccount(null, Role.builder().name("ROLE_KUMOH").build())))
+                .build();
+        when(oauth.findOAuthAccountBySubAndProvider("kakao-subject", "kakao")).thenReturn(Optional.of(account));
+        when(accounts.findByLoginIdWithRole("student@example.test")).thenReturn(Optional.of(account));
+        var authentication = new UsernamePasswordAuthenticationToken("kakao-subject", "", List.of());
+        var previous = provider.createLargeRefreshToken(authentication).getToken();
+
+        var refreshed = tokens.refresh(previous);
+        var claims = decoder.getClaims(new com.seproject.account.token.domain.JWT(refreshed.getAccessToken()));
+        assertEquals("student@example.test", claims.getSubject());
+        assertEquals(83L, ((Number) claims.get("accountId")).longValue());
+        assertNotEquals(previous, refreshed.getRefreshToken());
+        assertNotEquals(provider.createRefreshToken(authentication).getToken(),
+                provider.createRefreshToken(authentication).getToken());
+    }
+
+    @Test
+    void missingGenerationCannotRestoreAnOldGrant() throws Exception {
+        when(accounts.findActiveByIdWithRole(83)).thenReturn(Optional.of(account(83, "ROLE_USER")));
+        String grant = (String) sso.exchange(SECRET, code(), STATE, VERIFIER).get("grant");
+        records.remove("allday:sso:generation:83");
+        assertEquals(401, assertThrows(ResponseStatusException.class, () -> sso.identity(SECRET, grant)).getRawStatusCode());
+        sso.exchange(SECRET, code(), STATE, VERIFIER);
+        assertEquals(401, assertThrows(ResponseStatusException.class, () -> sso.identity(SECRET, grant)).getRawStatusCode());
     }
 
     @Test

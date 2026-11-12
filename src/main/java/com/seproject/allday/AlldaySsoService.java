@@ -34,6 +34,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class AlldaySsoService {
     private static final Duration ACCESS_LIFETIME = Duration.ofMinutes(30);
     private static final Duration CODE_LIFETIME = Duration.ofSeconds(60);
+    private static final Duration GRANT_LIFETIME = Duration.ofHours(8);
     private static final String PREFIX = "allday:sso:";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -76,7 +77,14 @@ public class AlldaySsoService {
         Duration remaining = Duration.between(Instant.now(), accessExpires);
         if (remaining.isNegative() || remaining.isZero() || remaining.compareTo(ACCESS_LIFETIME) > 0) throw unauthorized();
         String code = random();
-        var grant = new Grant(accountId, accessExpires.toEpochMilli(), generation(accountId), state, challenge);
+        String generationKey = generationKey(accountId);
+        String generation = values.get(generationKey);
+        if (generation == null) {
+            values.setIfAbsent(generationKey, random());
+            generation = values.get(generationKey);
+        }
+        if (generation == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
+        var grant = new Grant(accountId, accessExpires.toEpochMilli(), generation, state, challenge);
         if (revokedTokens.existsById(accessToken)) throw unauthorized();
         Duration ttl = remaining.compareTo(CODE_LIFETIME) < 0 ? remaining : CODE_LIFETIME;
         if (ttl.toMillis() < 1 || !Boolean.TRUE.equals(values.setIfAbsent(key("code", code), encode(grant), ttl))) {
@@ -99,11 +107,10 @@ public class AlldaySsoService {
         if (!Objects.equals(stored, values.getAndDelete(key))) throw unauthorized();
         Map<String, Object> result = identity(grant);
         String grantId = random();
-        Duration ttl = Duration.between(Instant.now(), Instant.ofEpochMilli(grant.getExpiresAt()));
-        if (ttl.toMillis() < 1) throw unauthorized();
+        grant.setExpiresAt(Instant.now().plus(GRANT_LIFETIME).toEpochMilli());
         grant.setState(null);
         grant.setChallenge(null);
-        values.set(key("grant", grantId), encode(grant), ttl);
+        values.set(key("grant", grantId), encode(grant), GRANT_LIFETIME);
         result.put("grant", grantId);
         result.put("expiresAt", grant.getExpiresAt());
         return result;
@@ -117,13 +124,15 @@ public class AlldaySsoService {
 
     public void revokeAccount(long accountId) {
         if (callback != null) {
-            values.set(PREFIX + "logout:" + accountId, random(), ACCESS_LIFETIME.plusMinutes(1));
+            values.setIfPresent(generationKey(accountId), random());
         }
     }
 
     private Map<String, Object> identity(Grant grant) {
         long accountId = grant.getAccountId();
-        if (grant.getExpiresAt() <= System.currentTimeMillis() || !generation(accountId).equals(grant.getGeneration())) {
+        String currentGeneration = values.get(generationKey(accountId));
+        if (grant.getExpiresAt() <= System.currentTimeMillis()
+                || currentGeneration == null || !currentGeneration.equals(grant.getGeneration())) {
             throw unauthorized();
         }
         var account = accounts.findActiveByIdWithRole(accountId).orElseThrow(AlldaySsoService::unauthorized);
@@ -135,8 +144,9 @@ public class AlldaySsoService {
         return result;
     }
 
-    private String generation(long accountId) {
-        return Objects.toString(values.get(PREFIX + "logout:" + accountId), "");
+    // A missing generation invalidates earlier grants, even after Redis eviction.
+    private static String generationKey(long accountId) {
+        return PREFIX + "generation:" + accountId;
     }
 
     private void requireEnabled() {

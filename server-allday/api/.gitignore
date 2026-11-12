@@ -1,7 +1,0 @@
-target/
-.local/
-.env
-*.dump
-*.log
-.DS_Store
-__pycache__/

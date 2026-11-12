@@ -1,9 +1,0 @@
-#!/usr/bin/python3 -I
-import sys
-
-if len(sys.argv) != 1:
-    raise SystemExit("This SSH entry point accepts JSON on stdin and no arguments.")
-sys.path.insert(0, "/opt/server-allday/node-helper")
-from node_helper.cli import main
-
-raise SystemExit(main(["--config", "/etc/server-allday/node-helper/config.json", "serve"]))

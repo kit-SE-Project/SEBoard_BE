@@ -46,4 +46,3 @@ storage/
 !.github/**/*.yml
 
 .DS_Store
-!server-allday/api/src/main/resources/application.yml

@@ -16,7 +16,6 @@ public class MyPageDTO {
     public static class MyInfoResponse {
         private String nickname;
         private Long userId;
-        private Long memberId;
         private String email;
         private List<String> roles;
         private String profileImageUrl;
@@ -29,7 +28,6 @@ public class MyPageDTO {
                     .email(account.getLoginId())
                     .roles(roles)
                     .userId(findMember.getBoardUserId())
-                    .memberId(account.getAccountId())
                     .profileImageUrl(profileImageUrl)
                     .developerProfile(developerProfile)
                     .build();
