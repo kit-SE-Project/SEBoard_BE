@@ -48,35 +48,22 @@ public class JwtDecoder {
         return getAccessToken(request);
     }
 
-    public JwsHeader getHeader(JWT jwt) {
+    public Jws<Claims> getSignedClaims(JWT jwt) {
         try {
-            return Jwts.parser()
-                    .setSigningKey(secret)
-                    .parseClaimsJws(jwt.getToken())
-                    .getHeader();
+            return Jwts.parser().setSigningKey(secret).parseClaimsJws(jwt.getToken());
         } catch (ExpiredJwtException e) {
-            throw new CustomAuthenticationException(ErrorCode.TOKEN_EXPIRED,e);
-        }
-        catch (JwtException e) {
+            throw new CustomAuthenticationException(ErrorCode.TOKEN_EXPIRED, e);
+        } catch (JwtException | IllegalArgumentException e) {
             throw new CustomAuthenticationException(ErrorCode.INVALID_JWT, e);
         }
     }
 
+    public JwsHeader getHeader(JWT jwt) {
+        return getSignedClaims(jwt).getHeader();
+    }
+
     public Claims getClaims(JWT jwt) {
-        try {
-
-            Claims body = Jwts.parser()
-                    .setSigningKey(secret)
-                    .parseClaimsJws(jwt.getToken())
-                    .getBody();
-
-            return body;
-        } catch (ExpiredJwtException e) {
-            throw new CustomAuthenticationException(ErrorCode.TOKEN_EXPIRED,e);
-        }
-        catch (JwtException e) {
-            throw new CustomAuthenticationException(ErrorCode.INVALID_JWT, e);
-        }
+        return getSignedClaims(jwt).getBody();
     }
 
     public String getSubject(JWT token) {

@@ -17,6 +17,7 @@ import com.seproject.account.role.service.RoleService;
 import com.seproject.account.token.domain.JWT;
 import com.seproject.account.token.service.TokenService;
 import com.seproject.account.utils.SecurityUtils;
+import com.seproject.allday.AlldaySsoService;
 import com.seproject.error.errorCode.ErrorCode;
 import com.seproject.error.exception.CustomAuthenticationException;
 import com.seproject.error.exception.CustomIllegalArgumentException;
@@ -47,6 +48,7 @@ public class AccountAppService {
     private final AccountService accountService;
     private final RoleService roleService;
     private final LogoutService logoutService;
+    private final AlldaySsoService alldaySso;
     private final PasswordChangeEmailService passwordChangeEmailService;
     private final KumohEmailService kumohEmailService;
 
@@ -61,6 +63,7 @@ public class AccountAppService {
 
         Account account = SecurityUtils.getAccount()
                 .orElseThrow(() -> new CustomAuthenticationException(ErrorCode.NOT_LOGIN,null));
+        alldaySso.revokeAccount(account.getAccountId());
         if(isOAuthUser(account)) {
             String redirectURL = logoutService.getRedirectURL();
             return new LogoutResponseDTO(true,redirectURL);
@@ -84,6 +87,7 @@ public class AccountAppService {
 
         Long accountId = account.getAccountId();
         Member member = memberService.findByAccountId(accountId);
+        alldaySso.revokeAccount(accountId);
 
         if(isOAuthUser(account)) {
             String redirectURL = logoutService.getRedirectURL();
@@ -104,6 +108,8 @@ public class AccountAppService {
 
         Long accountId = accountService.resetPassword(request.getEmail(),request.getPassword());
         Account account = accountService.findById(accountId);
+        // Revoke before commit: a revocation failure must roll back the password update.
+        alldaySso.revokeAccount(accountId);
         return ResetPasswordResponse.toDTO(account);
     }
 
@@ -119,6 +125,7 @@ public class AccountAppService {
 
         String newPassword = request.getNewPassword();
         accountService.changePassword(account, newPassword);
+        alldaySso.revokeAccount(account.getAccountId());
     }
 
     @Transactional

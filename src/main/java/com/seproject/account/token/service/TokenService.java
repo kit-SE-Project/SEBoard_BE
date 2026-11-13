@@ -55,22 +55,33 @@ public class TokenService {
 
         JWT jwt = new JWT(refreshToken);
 
-        if(existRefreshToken(refreshToken)) {
+        String tokenValue = jwt.getToken();
+        if (tokenValue == null || tokenValue.isBlank() || existRefreshToken(tokenValue)) {
             throw new CustomAuthenticationException(ErrorCode.DISABLE_REFRESH_TOKEN,null);
         }
 
         try {
-            boolean isLargeToken = isLargeToken(jwt);
-
-            if(isLargeToken) {
-                logoutLargeRefreshTokenRepository.save(new LogoutLargeRefreshToken(refreshToken));
-            } else {
-                logoutRefreshTokenRepository.save(new LogoutRefreshToken(refreshToken));
+            var signed = jwtDecoder.getSignedClaims(jwt);
+            Object type = signed.getHeader().get("token_type");
+            boolean isLargeToken = JWTProperties.LARGE_REFRESH_TOKEN.equals(type);
+            if (signed.getBody().getExpiration() == null
+                    || (!isLargeToken && !JWTProperties.REFRESH_TOKEN.equals(type))) {
+                throw new CustomAuthenticationException(ErrorCode.DISABLE_REFRESH_TOKEN, null);
             }
 
-           String subject = jwtDecoder.getSubject(jwt);
-           Account account = accountRepository.findByLoginIdWithRole(subject)
-                   .orElseThrow(() -> new CustomUserNotFoundException(ErrorCode.USER_NOT_FOUND,null));
+            Claims claims = signed.getBody();
+            Account account = findAccountBySubject(claims.getSubject())
+                    .orElseThrow(() -> new CustomUserNotFoundException(ErrorCode.USER_NOT_FOUND, null));
+            Object accountId = claims.get("accountId");
+            if (accountId != null && !account.getAccountId().toString().equals(accountId.toString())) {
+                throw new CustomAuthenticationException(ErrorCode.DISABLE_REFRESH_TOKEN, null);
+            }
+
+            if (isLargeToken) {
+                logoutLargeRefreshTokenRepository.save(new LogoutLargeRefreshToken(tokenValue));
+            } else {
+                logoutRefreshTokenRepository.save(new LogoutRefreshToken(tokenValue));
+            }
 
            Collection<? extends GrantedAuthority> authorities = account.getAuthorities();
            UsernamePasswordAuthenticationToken newToken
@@ -104,17 +115,7 @@ public class TokenService {
     public Authentication getAuthentication(JWT token) {
         Claims claims = jwtDecoder.getClaims(token);
 
-        //TODO : SecurityContext에 들어갈 Account, OAuthAccount를 조회하는 방법이 formLogin 방식은 jwt의 sub에 이메일이 들어가고, 카카오는 jwt의 sub에 고유 번호가 들어가서 문제 발생
-        Optional<Account> hasAccount = accountRepository.findByLoginIdWithRole(claims.getSubject());
-
-        if(hasAccount.isEmpty()) {
-            Optional<OAuthAccount> hasOAuthAccount = oAuthAccountRepository.findOAuthAccountBySubAndProvider(claims.getSubject(), "kakao");
-
-            if(hasOAuthAccount.isPresent()) {
-                String loginId = hasOAuthAccount.get().getLoginId();
-                hasAccount = accountRepository.findByLoginIdWithRole(loginId);
-            }
-        }
+        Optional<Account> hasAccount = findAccountBySubject(claims.getSubject());
 
         if(hasAccount.isPresent()) {
             Account account = hasAccount.get();
@@ -124,6 +125,12 @@ public class TokenService {
         }
 
         throw new CustomAuthenticationException(ErrorCode.UNAUTHORIZATION, null);
+    }
+
+    private Optional<Account> findAccountBySubject(String subject) {
+        return accountRepository.findByLoginIdWithRole(subject).or(() ->
+                oAuthAccountRepository.findOAuthAccountBySubAndProvider(subject, "kakao")
+                        .map(OAuthAccount::getLoginId).flatMap(accountRepository::findByLoginIdWithRole));
     }
 
     public boolean isLargeToken(JWT jwt) {
