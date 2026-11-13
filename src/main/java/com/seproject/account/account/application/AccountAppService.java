@@ -108,6 +108,8 @@ public class AccountAppService {
 
         Long accountId = accountService.resetPassword(request.getEmail(),request.getPassword());
         Account account = accountService.findById(accountId);
+        // Revoke before commit: a revocation failure must roll back the password update.
+        alldaySso.revokeAccount(accountId);
         return ResetPasswordResponse.toDTO(account);
     }
 
@@ -123,6 +125,7 @@ public class AccountAppService {
 
         String newPassword = request.getNewPassword();
         accountService.changePassword(account, newPassword);
+        alldaySso.revokeAccount(account.getAccountId());
     }
 
     @Transactional
